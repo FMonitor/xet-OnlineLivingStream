@@ -9,6 +9,10 @@
 
 #include "oatpp/core/macro/component.hpp"
 
+// 视频流相关组件的头文件
+#include "hls/Playlist.hpp"
+#include "Utils.hpp"
+
 /**
  *  Class which creates and holds Application components and registers components in oatpp::base::Environment
  *  Order of components initialization is from top to bottom
@@ -55,6 +59,16 @@ public:
    */
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, apiObjectMapper)([] {
     return oatpp::parser::json::mapping::ObjectMapper::createShared();
+  }());
+
+  //添加视频流相关组件
+  OATPP_CREATE_COMPONENT(std::shared_ptr<StaticFilesManager>, staticFilesManager)([] {
+    return std::make_shared<StaticFilesManager>(EXAMPLE_MEDIA_FOLDER /* path to '<this-repo>/Media-Stream/video' folder. Put full, absolute path here */) ;
+  }());
+  
+  OATPP_CREATE_COMPONENT(std::shared_ptr<Playlist>, livePlayList)([] {
+    auto playlist = Playlist::parseFromFile(EXAMPLE_MEDIA_FOLDER "/playlist_live.m3u8" /* path to '<this-repo>/Media-Stream/video/playlist_live.m3u8' file. Put full, absolute path here */);
+    return std::make_shared<Playlist>(playlist);
   }());
 
 };
