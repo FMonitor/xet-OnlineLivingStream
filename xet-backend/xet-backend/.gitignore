@@ -33,6 +33,7 @@
 
 # custom build
 build/
+.vscode/
 
 # idea
 .idea/
