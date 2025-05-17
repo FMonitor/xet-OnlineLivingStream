@@ -13,6 +13,9 @@
 #include "hls/Playlist.hpp"
 #include "Utils.hpp"
 
+// websocket服务器相关组件的头文件
+#include "rooms/Lobby.hpp"
+
 /**
  *  Class which creates and holds Application components and registers components in oatpp::base::Environment
  *  Order of components initialization is from top to bottom
@@ -48,7 +51,7 @@ public:
   /**
    *  Create ConnectionHandler component which uses Router component to route requests
    */
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)([] {
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)("http",[] {
     OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); // get Router component
     OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor); // get Async executor component
     return oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executor);
@@ -61,14 +64,29 @@ public:
     return oatpp::parser::json::mapping::ObjectMapper::createShared();
   }());
 
-  //添加视频流相关组件
+  /**
+   *  添加视频流相关组件
+   */
   OATPP_CREATE_COMPONENT(std::shared_ptr<StaticFilesManager>, staticFilesManager)([] {
     return std::make_shared<StaticFilesManager>(EXAMPLE_MEDIA_FOLDER /* path to '<this-repo>/Media-Stream/video' folder. Put full, absolute path here */) ;
   }());
   
+    /**
+   *  添加视频流相关组件
+   */
   OATPP_CREATE_COMPONENT(std::shared_ptr<Playlist>, livePlayList)([] {
     auto playlist = Playlist::parseFromFile(EXAMPLE_MEDIA_FOLDER "/playlist_live.m3u8" /* path to '<this-repo>/Media-Stream/video/playlist_live.m3u8' file. Put full, absolute path here */);
     return std::make_shared<Playlist>(playlist);
+  }());
+
+  /**
+   *  添加Websocket服务器相关组件
+   */
+   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, websocketConnectionHandler)("websocket", [] {
+    OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor);
+    auto connectionHandler = oatpp::websocket::AsyncConnectionHandler::createShared(executor);
+    connectionHandler->setSocketInstanceListener(std::make_shared<Lobby>());
+    return connectionHandler;
   }());
 
 };

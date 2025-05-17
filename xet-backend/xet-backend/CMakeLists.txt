@@ -20,17 +20,25 @@ add_library(${project_name}-lib
         src/Utils.hpp
         src/hls/Playlist.cpp
         src/hls/Playlist.hpp
-        
-
+        # websocket服务器相关组件
+        src/controller/RoomsController.hpp
+        src/rooms/Peer.cpp
+        src/rooms/Peer.hpp
+        src/rooms/Room.cpp
+        src/rooms/Room.hpp
+        src/rooms/Lobby.cpp
+        src/rooms/Lobby.hpp
 )
 
 ## link libs
 
 find_package(oatpp 1.3.0 REQUIRED)
+find_package(oatpp-websocket    1.3.0 REQUIRED)
 
 target_link_libraries(${project_name}-lib
         PUBLIC oatpp::oatpp
         PUBLIC oatpp::oatpp-test
+        PUBLIC oatpp::oatpp-websocket
 )
 
 ## add executables

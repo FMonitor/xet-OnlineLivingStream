@@ -1,5 +1,6 @@
 #include "./controller/MyController.hpp"
 #include "./controller/MediaController.hpp"
+#include "./controller/RoomsController.hpp"
 #include "./AppComponent.hpp"
 
 #include "oatpp/network/Server.hpp"
@@ -20,8 +21,11 @@ void run() {
   //添加视频流Api控制器
   router->addController(MediaController::createShared());
 
+  //添加websocket服务器Api控制器
+  router->addController(std::make_shared<RoomsController>());
+
   /* Get connection handler component */
-  OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler);
+  OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler,"http");
 
   /* Get connection provider component */
   OATPP_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, connectionProvider);
