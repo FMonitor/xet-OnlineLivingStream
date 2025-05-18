@@ -1,5 +1,6 @@
 #include "./controller/MyController.hpp"
 #include "./controller/MediaController.hpp"
+#include "./controller/LiveRoom/LiveRoomController.hpp"
 #include "./controller/RoomsController.hpp"
 #include "./AppComponent.hpp"
 
@@ -17,6 +18,9 @@ void run() {
 
   /* Create MyController and add all of its endpoints to router */
   router->addController(std::make_shared<MyController>());
+
+  /* 添加数据库增删改查API控制器 */
+  router->addController(std::make_shared<LiveRoomController>());
 
   //添加视频流Api控制器
   router->addController(MediaController::createShared());

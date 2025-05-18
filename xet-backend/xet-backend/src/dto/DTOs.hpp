@@ -14,11 +14,59 @@ class MessageDto : public oatpp::DTO {
 
   DTO_INIT(MessageDto, DTO)
 
-  DTO_FIELD(Int32, statusCode);
+  DTO_FIELD(Int64, statusCode);
   DTO_FIELD(String, message);
 
 };
 
+class UserDto : public oatpp::DTO {
+
+  DTO_INIT(UserDto, DTO)
+
+  DTO_FIELD(Int64, id);
+  DTO_FIELD(String, name);
+
+};
+
+class RUserDto : public oatpp::DTO {
+
+  DTO_INIT(RUserDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<UserDto>>, data);
+
+};
+
+class UInt64Dto : public oatpp::DTO
+{
+
+  DTO_INIT(UInt64Dto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+
+  DTO_FIELD(Int64, message);
+};
+class StringDto : public oatpp::DTO
+{
+
+  DTO_INIT(StringDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+
+  DTO_FIELD(String, message);
+};
+class StatusDto : public oatpp::DTO
+{
+
+  DTO_INIT(StatusDto, DTO)
+
+  DTO_FIELD(String, status);
+
+  DTO_FIELD(Int64, code);
+
+  DTO_FIELD(String, message);
+};
 #include OATPP_CODEGEN_END(DTO)
 
 #endif /* DTOs_hpp */
