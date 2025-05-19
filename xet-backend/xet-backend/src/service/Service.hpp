@@ -24,6 +24,12 @@ public:
   oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, int64_t page);
   oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, int64_t page);
   oatpp::Object<RLiveFileDto> getLiveFile(const oatpp::Int64 &id, int64_t page);
+
+  oatpp::Object<MessageDto> instertLiveComment(oatpp::Object<LiveCommentDto> comment);
+
+  oatpp::Object<MessageDto> instertLiveExpla(oatpp::Object<LiveExplaDto> explanation);
+
+  oatpp::Object<MessageDto> instertLiveFile(oatpp::Object<LiveFileDto> file);
 };
 
 #endif // CRUD_USERSERVICE_HPP

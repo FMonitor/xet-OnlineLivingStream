@@ -306,6 +306,102 @@ public:
     result_dto->message = "Files retrieved successfully.";
     return result_dto;
   }
+
+  oatpp::Object<MessageDto> instertLiveComment(oatpp::Object<LiveCommentDto> comment)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = MessageDto::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    try
+    {
+      // 插入评论数据
+      DBSession.sql("INSERT INTO live_comment (living_stream_id, creator_user_id, created_at, content) VALUES (?, ?, ?, ?)")
+          .bind((int64_t)comment->living_stream_id)
+          .bind((int64_t)comment->creator_user_id)
+          .bind((std::string)comment->created_at)
+          .bind((std::string)comment->content)
+          .execute();
+
+      // 设置返回结果
+      result_dto->statusCode = 200;
+      result_dto->message = "Comment inserted successfully.";
+    }
+    catch (const std::exception &e)
+    {
+      // 捕获异常并设置错误信息
+      result_dto->statusCode = 500;
+      result_dto->message = std::string("Failed to insert comment: ") + e.what();
+    }
+
+    return result_dto;
+  }
+
+  oatpp::Object<MessageDto> instertLiveExpla(oatpp::Object<LiveExplaDto> explanation)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = MessageDto::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    try
+    {
+      // 插入讲解数据
+      DBSession.sql("INSERT INTO live_explanation (living_stream_id, creator_user_id, created_at, content) VALUES (?, ?, ?, ?)")
+          .bind((int64_t)explanation->living_stream_id)
+          .bind((int64_t)explanation->creator_user_id)
+          .bind((std::string)explanation->created_at)
+          .bind((std::string)explanation->content)
+          .execute();
+
+      // 设置返回结果
+      result_dto->statusCode = 200;
+      result_dto->message = "Explanation inserted successfully.";
+    }
+    catch (const std::exception &e)
+    {
+      // 捕获异常并设置错误信息
+      result_dto->statusCode = 500;
+      result_dto->message = std::string("Failed to insert explanation: ") + e.what();
+    }
+
+    return result_dto;
+  }
+
+  oatpp::Object<MessageDto> instertLiveFile(oatpp::Object<LiveFileDto> file)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = MessageDto::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    try
+    {
+      // 插入文件数据
+      DBSession.sql("INSERT INTO live_file (living_stream_id, creator_user_id, created_at, file_url) VALUES (?, ?, ?, ?)")
+          .bind((int64_t)file->living_stream_id)
+          .bind((int64_t)file->creator_user_id)
+          .bind((std::string)file->created_at)
+          .bind((std::string)file->file_url)
+          .execute();
+
+      // 设置返回结果
+      result_dto->statusCode = 200;
+      result_dto->message = "File inserted successfully.";
+    }
+    catch (const std::exception &e)
+    {
+      // 捕获异常并设置错误信息
+      result_dto->statusCode = 500;
+      result_dto->message = std::string("Failed to insert file: ") + e.what();
+    }
+
+    return result_dto;
+  }
 };
 
 #endif // Dao_HPP

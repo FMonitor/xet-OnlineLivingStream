@@ -112,6 +112,7 @@ public:
       return _return(controller->createDtoResponse(Status::CODE_200, dto));
     }
   };
+
   ADD_CORS(LiveExplaGET,
            "*",
            "GET,POST,PUT,DELETE,OPTIONS",
@@ -135,6 +136,7 @@ public:
       return _return(controller->createDtoResponse(Status::CODE_200, dto));
     }
   };
+
   ADD_CORS(LiveFileGET,
            "*",
            "GET,POST,PUT,DELETE,OPTIONS",
@@ -158,83 +160,121 @@ public:
       return _return(controller->createDtoResponse(Status::CODE_200, dto));
     }
   };
-  //   /**
-  //    * POST方法:添加一个新的用户
-  //    * 参数:User信息列表(除了id) UserDto
-  //    * 返回值: 新用户id UInt64Dto
-  //    */
-  //   ADD_CORS(UserPOST,
-  //            "*",
-  //            "GET,POST,PUT,DELETE,OPTIONS",
-  //            "Content-Type, Authorization",
-  //            "3600");
-  //   ENDPOINT_ASYNC("POST", "/user", UserPOST){
-  //       ENDPOINT_ASYNC_INIT(UserPOST)
-  //       // 异步端点中,端点逻辑需要包含在Action函数中
-  //       Action act() override{
-  //           return request->readBodyToDtoAsync<oatpp::Object<UserDto>>(controller->getDefaultObjectMapper()).callbackTo(&UserPOST::returnResponse);
-  //       }
 
-  //       Action
-  //       returnResponse(const oatpp::Object<UserDto> &rDto)
-  //       {
-  //         UserService userService;
-  //         return _return(controller->createDtoResponse(Status::CODE_200, userService.createUserMySQL(rDto)));
-  //       }
-  //     };
+  ADD_CORS(LiveCommentPOST,
+           "*",
+           "GET,POST,PUT,DELETE,OPTIONS",
+           "Content-Type, Authorization",
+           "3600");
+  ENDPOINT_ASYNC("POST", "/home/live/{id}/comment", LiveCommentPOST){
+      ENDPOINT_ASYNC_INIT(LiveCommentPOST)
+      // 异步端点中,端点逻辑需要包含在Action函数中
+      Action act() override{
+          return request->readBodyToDtoAsync<oatpp::Object<LiveCommentDto>>(controller->getDefaultObjectMapper()).callbackTo(&LiveCommentPOST::returnResponse);
+}
 
-  // /**
-  //  * PUT方法:编辑用户信息
-  //  * 参数:User信息列表(除了id) UserDto
-  //  * 返回值: 影响行数(1代表编辑成功) UInt64Dto
-  //  */
-  // ADD_CORS(UserPUT,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("PUT", "/user", UserPUT){
-  //     ENDPOINT_ASYNC_INIT(UserPUT)
-  //     // 异步端点中,端点逻辑需要包含在Action函数中
-  //     Action act() override{
-  //         return request->readBodyToDtoAsync<oatpp::Object<UserDto>>(controller->getDefaultObjectMapper()).callbackTo(&UserPUT::returnResponse);
-  // }
+Action
+returnResponse(const oatpp::Object<LiveCommentDto> &rDto)
+{
+  Service service;
+  return _return(controller->createDtoResponse(Status::CODE_200, service.instertLiveComment(rDto)));
+}
+}
+;
 
-  // Action returnResponse(const oatpp::Object<UserDto> &rDto)
-  // {
-  //   UserService userService;
-  //   return _return(controller->createDtoResponse(Status::CODE_200, userService.updateUser(rDto)));
-  // }
-  // }
-  // ;
+  ADD_CORS(LiveExplaPOST,
+          "*",
+          "GET,POST,PUT,DELETE,OPTIONS",
+          "Content-Type, Authorization",
+          "3600");
+  ENDPOINT_ASYNC("POST", "/home/live/{id}/expla", LiveExplaPOST){
+      ENDPOINT_ASYNC_INIT(LiveExplaPOST)
 
-  // /**
-  //  * DELETE方法:删除用户
-  //  * 参数:要删除的用户的id UInt64Dto
-  //  * 返回值: 影响行数(1代表编辑成功) UInt64Dto
-  //  */
-  // ADD_CORS(UserDELETE,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("DELETE", "/user/{id}", UserDELETE){
-  //     ENDPOINT_ASYNC_INIT(UserDELETE)
-  //     // 异步端点中,端点逻辑需要包含在Action函数中
-  //     Action act() override{
-  //         UserService userService;                                               // Create user service.
-  // Int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10); // 获取路径参数
-  // // 异步操作示例（如数据库查询）
-  // return _return(controller->createDtoResponse(Status::CODE_200, userService.deleteUserById(id)));
-  // }
-  // }
-  // ;
-  // };
-  /**
-   * Codegen 结束
-   * 是否是固定模板:是
-   */
-};
+          Action act() override{
+              return request->readBodyToDtoAsync<oatpp::Object<LiveExplaDto>>(controller->getDefaultObjectMapper()).callbackTo(&LiveExplaPOST::returnResponse);
+  }
+
+  Action returnResponse(const oatpp::Object<LiveExplaDto> &rDto)
+  {
+    Service service;
+    return _return(controller->createDtoResponse(Status::CODE_200, service.instertLiveExpla(rDto)));
+  }
+  }
+  ;
+
+  ADD_CORS(LiveFilePOST,
+          "*",
+          "GET,POST,PUT,DELETE,OPTIONS",
+          "Content-Type, Authorization",
+          "3600");
+  ENDPOINT_ASYNC("POST", "/home/live/{id}/file", LiveFilePOST){
+      ENDPOINT_ASYNC_INIT(LiveFilePOST)
+
+          Action act() override{
+              return request->readBodyToDtoAsync<oatpp::Object<LiveFileDto>>(controller->getDefaultObjectMapper()).callbackTo(&LiveFilePOST::returnResponse);
+  }
+
+  Action returnResponse(const oatpp::Object<LiveFileDto> &rDto)
+  {
+    Service service;
+    return _return(controller->createDtoResponse(Status::CODE_200, service.instertLiveFile(rDto)));
+  }
+  }
+  ;
+
+// /**
+//  * PUT方法:编辑用户信息
+//  * 参数:User信息列表(除了id) UserDto
+//  * 返回值: 影响行数(1代表编辑成功) UInt64Dto
+//  */
+// ADD_CORS(UserPUT,
+//          "*",
+//          "GET,POST,PUT,DELETE,OPTIONS",
+//          "Content-Type, Authorization",
+//          "3600");
+// ENDPOINT_ASYNC("PUT", "/user", UserPUT){
+//     ENDPOINT_ASYNC_INIT(UserPUT)
+//     // 异步端点中,端点逻辑需要包含在Action函数中
+//     Action act() override{
+//         return request->readBodyToDtoAsync<oatpp::Object<UserDto>>(controller->getDefaultObjectMapper()).callbackTo(&UserPUT::returnResponse);
+// }
+
+// Action returnResponse(const oatpp::Object<UserDto> &rDto)
+// {
+//   UserService userService;
+//   return _return(controller->createDtoResponse(Status::CODE_200, userService.updateUser(rDto)));
+// }
+// }
+// ;
+
+// /**
+//  * DELETE方法:删除用户
+//  * 参数:要删除的用户的id UInt64Dto
+//  * 返回值: 影响行数(1代表编辑成功) UInt64Dto
+//  */
+// ADD_CORS(UserDELETE,
+//          "*",
+//          "GET,POST,PUT,DELETE,OPTIONS",
+//          "Content-Type, Authorization",
+//          "3600");
+// ENDPOINT_ASYNC("DELETE", "/user/{id}", UserDELETE){
+//     ENDPOINT_ASYNC_INIT(UserDELETE)
+//     // 异步端点中,端点逻辑需要包含在Action函数中
+//     Action act() override{
+//         UserService userService;                                               // Create user service.
+// Int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10); // 获取路径参数
+// // 异步操作示例（如数据库查询）
+// return _return(controller->createDtoResponse(Status::CODE_200, userService.deleteUserById(id)));
+// }
+// }
+// ;
+// };
+/**
+ * Codegen 结束
+ * 是否是固定模板:是
+ */
+}
+;
 #include OATPP_CODEGEN_END(ApiController)
 
 #endif /* UserController_hpp */

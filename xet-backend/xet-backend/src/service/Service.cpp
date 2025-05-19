@@ -25,3 +25,15 @@ oatpp::Object<RLiveFileDto> Service::getLiveFile(const oatpp::Int64 &id, int64_t
 {
   return dao.getLiveFile(id, PAGESIZE, page);
 }
+oatpp::Object<MessageDto> Service::instertLiveComment(oatpp::Object<LiveCommentDto> comment)
+{
+  return dao.instertLiveComment(comment);
+}
+oatpp::Object<MessageDto> Service::instertLiveExpla(oatpp::Object<LiveExplaDto> explanation)
+{
+  return dao.instertLiveExpla(explanation);
+}
+oatpp::Object<MessageDto> Service::instertLiveFile(oatpp::Object<LiveFileDto> file)
+{
+  return dao.instertLiveFile(file);
+}
