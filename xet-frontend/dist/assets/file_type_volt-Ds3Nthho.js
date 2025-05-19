@@ -1,0 +1,1 @@
+const e="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3e%3ctitle%3efile_type_volt%3c/title%3e%3cpolygon%20points='12.068%202%2018.934%202%2016.204%2010.421%2023.526%209.09%2013.115%2030%2016.152%2015.495%208.474%2017%2012.068%202%2012.068%202'%20style='fill:gray'/%3e%3c/svg%3e";export{e as default};
