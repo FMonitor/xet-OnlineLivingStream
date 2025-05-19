@@ -65,14 +65,14 @@ public:
   }());
 
   /**
-   *  添加视频流相关组件
+   *  添加文件相关组件
    */
   OATPP_CREATE_COMPONENT(std::shared_ptr<StaticFilesManager>, staticFilesManager)([] {
     return std::make_shared<StaticFilesManager>(EXAMPLE_MEDIA_FOLDER /* path to '<this-repo>/Media-Stream/video' folder. Put full, absolute path here */) ;
   }());
   
     /**
-   *  添加视频流相关组件
+   *  添加直播流相关组件
    */
   OATPP_CREATE_COMPONENT(std::shared_ptr<Playlist>, livePlayList)([] {
     auto playlist = Playlist::parseFromFile(EXAMPLE_MEDIA_FOLDER "/playlist_live.m3u8" /* path to '<this-repo>/Media-Stream/video/playlist_live.m3u8' file. Put full, absolute path here */);

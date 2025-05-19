@@ -110,7 +110,7 @@ target_link_libraries(${project_name}-exe
 ################################################################################
 ## 全局预定义宏
 add_definitions(
-    -DEXAMPLE_MEDIA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/video"  ## 视频文件存储路径
+    -DEXAMPLE_MEDIA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/file"  ## 视频文件存储路径
 )
 
 ## 目标属性统一配置
