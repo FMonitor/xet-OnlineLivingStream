@@ -83,6 +83,9 @@ class LiveDto : public oatpp::DTO
   DTO_FIELD(Int64, creator_user_id);
   DTO_FIELD(String, description);
   DTO_FIELD(String, playback_url);
+  DTO_FIELD(Int64, page_count_comment);
+  DTO_FIELD(Int64, page_count_explanation);
+  DTO_FIELD(Int64, page_count_file);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveCommentDto>>, comments);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveExplaDto>>, explanations);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveFileDto>>, files);

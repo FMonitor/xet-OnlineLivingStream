@@ -3,7 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
-const int64_t PAGESIZE = 20;
+const int64_t PAGESIZE = 1;
 
 oatpp::Object<RUserDto> Service::getUserById(const oatpp::Int64 &id)
 {

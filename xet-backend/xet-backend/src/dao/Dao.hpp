@@ -90,13 +90,10 @@ public:
                                      .bind((int64_t)id)
                                      .execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
+    livedto->page_count_comment = (total_comments_count % pagesize) == 0 ? (total_comments_count / pagesize) : (total_comments_count / pagesize) + 1;
     int64_t comments_offset = (total_comments_count > pagesize) ? total_comments_count - pagesize : 0;
 
-    auto result_comments_db = DBSession.sql("SELECT comment_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
-                                  .bind((int64_t)id)
-                                  .bind((int64_t)pagesize)
-                                  .bind(comments_offset)
-                                  .execute();
+    auto result_comments_db = DBSession.sql("SELECT comment_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?").bind((int64_t)id).bind((int64_t)pagesize).bind(comments_offset).execute();
 
     for (auto live_comments_row : result_comments_db)
     {
@@ -110,17 +107,12 @@ public:
     }
 
     // 查询讲解总数并分页
-    auto total_explanations_result = DBSession.sql("SELECT COUNT(*) FROM live_explanation WHERE living_stream_id = ?")
-                                         .bind((int64_t)id)
-                                         .execute();
+    auto total_explanations_result = DBSession.sql("SELECT COUNT(*) FROM live_explanation WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_explanations_count = total_explanations_result.fetchOne()[0].get<int64_t>();
+    livedto->page_count_explanation = (total_explanations_count % pagesize) == 0 ? (total_explanations_count / pagesize) : (total_explanations_count / pagesize) + 1;
     int64_t explanations_offset = (total_explanations_count > pagesize) ? total_explanations_count - pagesize : 0;
 
-    auto result_explanations_db = DBSession.sql("SELECT expla_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
-                                      .bind((int64_t)id)
-                                      .bind((int64_t)pagesize)
-                                      .bind(explanations_offset)
-                                      .execute();
+    auto result_explanations_db = DBSession.sql("SELECT expla_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?").bind((int64_t)id).bind((int64_t)pagesize).bind(explanations_offset).execute();
 
     for (auto explanation_row : result_explanations_db)
     {
@@ -134,17 +126,12 @@ public:
     }
 
     // 查询文件总数并分页
-    auto total_files_result = DBSession.sql("SELECT COUNT(*) FROM live_file WHERE living_stream_id = ?")
-                                  .bind((int64_t)id)
-                                  .execute();
+    auto total_files_result = DBSession.sql("SELECT COUNT(*) FROM live_file WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_files_count = total_files_result.fetchOne()[0].get<int64_t>();
+    livedto->page_count_file = (total_files_count % pagesize) == 0 ? (total_files_count / pagesize) : (total_files_count / pagesize) + 1;
     int64_t files_offset = (total_files_count > pagesize) ? total_files_count - pagesize : 0;
 
-    auto result_files_db = DBSession.sql("SELECT file_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
-                               .bind((int64_t)id)
-                               .bind((int64_t)pagesize)
-                               .bind(files_offset)
-                               .execute();
+    auto result_files_db = DBSession.sql("SELECT file_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?").bind((int64_t)id).bind((int64_t)pagesize).bind(files_offset).execute();
 
     for (auto file_row : result_files_db)
     {
