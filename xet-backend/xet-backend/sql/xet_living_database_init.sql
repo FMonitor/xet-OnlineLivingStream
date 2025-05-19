@@ -6,6 +6,7 @@ CREATE TABLE users (
     username VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL,
+    avatar_url VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -57,10 +58,10 @@ CREATE TABLE live_file (
 );
 
 -- 添加示例用户
-INSERT INTO users (username, password, email) VALUES 
-('user1', 'password123', 'user1@example.com'),
-('user2', 'password456', 'user2@example.com'),
-('user3', 'password789', 'user3@example.com');
+INSERT INTO users (username, password, email, avatar_url) VALUES 
+('user1', 'password123', 'user1@example.com', 'http://localhost:8000/file/user_avatar_1.svg'),
+('user2', 'password456', 'user2@example.com', 'http://localhost:8000/file/user_avatar_2.svg'),
+('user3', 'password789', 'user3@example.com', 'http://localhost:8000/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
 INSERT INTO living_stream (creator_user_id, description, playback_url) VALUES 

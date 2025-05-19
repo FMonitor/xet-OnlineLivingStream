@@ -25,7 +25,7 @@ class UserDto : public oatpp::DTO {
 
   DTO_FIELD(Int64, id);
   DTO_FIELD(String, name);
-
+  DTO_FIELD(String, avatar_url);
 };
 
 //用于返回用户信息(不包括隐私信息)的Dto

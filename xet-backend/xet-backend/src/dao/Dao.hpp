@@ -23,7 +23,7 @@ public:
 
     DBSession.sql("USE xet_living_table").execute();
 
-    auto result_db = DBSession.sql("SELECT user_id,username FROM users WHERE user_id = ?").bind((int64_t)id).execute();
+    auto result_db = DBSession.sql("SELECT user_id,username,avatar_url FROM users WHERE user_id = ?").bind((int64_t)id).execute();
 
     if (result_db.count() == 0)
     {
@@ -42,6 +42,7 @@ public:
     auto userdto = UserDto::createShared();
     userdto->id = row[0].get<int64_t>();
     userdto->name = row[1].get<std::string>();
+    userdto->avatar_url = row[2].get<std::string>();
     result_dto->data->push_back(userdto);
 
     return result_dto;
