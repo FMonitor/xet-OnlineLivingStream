@@ -98,6 +98,34 @@ class RLiveDto : public oatpp::DTO
   DTO_FIELD(oatpp::List<oatpp::Object<LiveDto>>, data);
 };
 
+// 用于返回直播中评论信息组的Dto
+class RLiveCommentDto : public oatpp::DTO
+{
+  DTO_INIT(RLiveCommentDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<LiveCommentDto>>, data);
+};
+// 用于返回直播中讲解信息组的Dto
+class RLiveExplaDto : public oatpp::DTO
+{
+  DTO_INIT(RLiveExplaDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<LiveExplaDto>>, data);
+};
+// 用于返回直播中文件信息组的Dto
+class RLiveFileDto : public oatpp::DTO
+{
+  DTO_INIT(RLiveFileDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<LiveFileDto>>, data);
+};
+
 class UInt64Dto : public oatpp::DTO
 {
 

@@ -47,7 +47,7 @@ public:
     return result_dto;
   }
   // 第一个参数是直播id,第二个参数是初始化的时候评论,讲解等的最大数目
-  oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id, const int64_t num)
+  oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id, const int64_t pagesize)
   {
     auto DBSession = cli.getSession();
     auto result_dto = RLiveDto::createShared();
@@ -90,11 +90,11 @@ public:
                                      .bind((int64_t)id)
                                      .execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
-    int64_t comments_offset = (total_comments_count > num) ? total_comments_count - num : 0;
+    int64_t comments_offset = (total_comments_count > pagesize) ? total_comments_count - pagesize : 0;
 
     auto result_comments_db = DBSession.sql("SELECT comment_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                   .bind((int64_t)id)
-                                  .bind((int64_t)num)
+                                  .bind((int64_t)pagesize)
                                   .bind(comments_offset)
                                   .execute();
 
@@ -114,11 +114,11 @@ public:
                                          .bind((int64_t)id)
                                          .execute();
     auto total_explanations_count = total_explanations_result.fetchOne()[0].get<int64_t>();
-    int64_t explanations_offset = (total_explanations_count > num) ? total_explanations_count - num : 0;
+    int64_t explanations_offset = (total_explanations_count > pagesize) ? total_explanations_count - pagesize : 0;
 
     auto result_explanations_db = DBSession.sql("SELECT expla_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                       .bind((int64_t)id)
-                                      .bind((int64_t)num)
+                                      .bind((int64_t)pagesize)
                                       .bind(explanations_offset)
                                       .execute();
 
@@ -138,11 +138,11 @@ public:
                                   .bind((int64_t)id)
                                   .execute();
     auto total_files_count = total_files_result.fetchOne()[0].get<int64_t>();
-    int64_t files_offset = (total_files_count > num) ? total_files_count - num : 0;
+    int64_t files_offset = (total_files_count > pagesize) ? total_files_count - pagesize : 0;
 
     auto result_files_db = DBSession.sql("SELECT file_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                .bind((int64_t)id)
-                               .bind((int64_t)num)
+                               .bind((int64_t)pagesize)
                                .bind(files_offset)
                                .execute();
 
@@ -157,6 +157,153 @@ public:
       livedto->files->push_back(file);
     }
 
+    return result_dto;
+  }
+  // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
+  oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RLiveCommentDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<LiveCommentDto>>::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 查询评论总数
+    auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?")
+                                     .bind((int64_t)id)
+                                     .execute();
+    auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
+
+    // 计算偏移量
+    int64_t comments_offset = (page - 1) * pagesize;
+
+    // 检查偏移量是否超出范围
+    if (comments_offset >= total_comments_count)
+    {
+      result_dto->statusCode = 404;
+      result_dto->message = "No comments found for the given page.";
+      return result_dto;
+    }
+
+    // 查询评论数据
+    auto result_comments_db = DBSession.sql("SELECT comment_id, living_stream_id, creator_user_id, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at, content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+                                  .bind((int64_t)id)
+                                  .bind((int64_t)pagesize)
+                                  .bind(comments_offset)
+                                  .execute();
+
+    for (auto live_comments_row : result_comments_db)
+    {
+      auto comment = LiveCommentDto::createShared();
+      comment->comment_id = live_comments_row[0].get<int64_t>();
+      comment->living_stream_id = live_comments_row[1].get<int64_t>();
+      comment->creator_user_id = live_comments_row[2].get<int64_t>();
+      comment->created_at = live_comments_row[3].get<std::string>();
+      comment->content = live_comments_row[4].get<std::string>();
+      result_dto->data->push_back(comment);
+    }
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Comments retrieved successfully.";
+    return result_dto;
+  }
+  // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
+  oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RLiveExplaDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<LiveExplaDto>>::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 查询讲解总数
+    auto total_explanations_result = DBSession.sql("SELECT COUNT(*) FROM live_explanation WHERE living_stream_id = ?")
+                                         .bind((int64_t)id)
+                                         .execute();
+    auto total_explanations_count = total_explanations_result.fetchOne()[0].get<int64_t>();
+
+    // 计算偏移量
+    int64_t explanations_offset = (page - 1) * pagesize;
+
+    // 检查偏移量是否超出范围
+    if (explanations_offset >= total_explanations_count)
+    {
+      result_dto->statusCode = 404;
+      result_dto->message = "No explanations found for the given page.";
+      return result_dto;
+    }
+
+    // 查询讲解数据
+    auto result_explanations_db = DBSession.sql("SELECT expla_id, living_stream_id, creator_user_id, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at, content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+                                      .bind((int64_t)id)
+                                      .bind((int64_t)pagesize)
+                                      .bind(explanations_offset)
+                                      .execute();
+
+    for (auto explanation_row : result_explanations_db)
+    {
+      auto explanation = LiveExplaDto::createShared();
+      explanation->expla_id = explanation_row[0].get<int64_t>();
+      explanation->living_stream_id = explanation_row[1].get<int64_t>();
+      explanation->creator_user_id = explanation_row[2].get<int64_t>();
+      explanation->created_at = explanation_row[3].get<std::string>();
+      explanation->content = explanation_row[4].get<std::string>();
+      result_dto->data->push_back(explanation);
+    }
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Explanations retrieved successfully.";
+    return result_dto;
+  }
+  // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
+  oatpp::Object<RLiveFileDto> getLiveFile(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RLiveFileDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<LiveFileDto>>::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 查询文件总数
+    auto total_files_result = DBSession.sql("SELECT COUNT(*) FROM live_file WHERE living_stream_id = ?")
+                                  .bind((int64_t)id)
+                                  .execute();
+    auto total_files_count = total_files_result.fetchOne()[0].get<int64_t>();
+
+    // 计算偏移量
+    int64_t files_offset = (page - 1) * pagesize;
+
+    // 检查偏移量是否超出范围
+    if (files_offset >= total_files_count)
+    {
+      result_dto->statusCode = 404;
+      result_dto->message = "No files found for the given page.";
+      return result_dto;
+    }
+
+    // 查询文件数据
+    auto result_files_db = DBSession.sql("SELECT file_id, living_stream_id, creator_user_id, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at, file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+                               .bind((int64_t)id)
+                               .bind((int64_t)pagesize)
+                               .bind(files_offset)
+                               .execute();
+
+    for (auto file_row : result_files_db)
+    {
+      auto file = LiveFileDto::createShared();
+      file->file_id = file_row[0].get<int64_t>();
+      file->living_stream_id = file_row[1].get<int64_t>();
+      file->creator_user_id = file_row[2].get<int64_t>();
+      file->created_at = file_row[3].get<std::string>();
+      file->file_url = file_row[4].get<std::string>();
+      result_dto->data->push_back(file);
+    }
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Files retrieved successfully.";
     return result_dto;
   }
 };

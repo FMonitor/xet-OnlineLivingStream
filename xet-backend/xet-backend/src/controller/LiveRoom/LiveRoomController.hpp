@@ -28,7 +28,6 @@ class LiveRoomController : public oatpp::web::server::api::ApiController
 {
 private:
 public:
-
   /**
    * 带有对象映射器的构造函数
    * @param objectMapper - 用于序列化/反序列化 DTO 的默认对象映射器
@@ -90,6 +89,75 @@ public:
     }
   };
 
+  ADD_CORS(LiveCommentGET,
+           "*",
+           "GET,POST,PUT,DELETE,OPTIONS",
+           "Content-Type, Authorization",
+           "3600");
+  ENDPOINT_ASYNC("GET", "/home/live/{id}/comment/{page}", LiveCommentGET)
+  {
+    ENDPOINT_ASYNC_INIT(LiveCommentGET)
+
+    // 从请求中解析 id
+    v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
+    // 从请求中解析 id
+    v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
+
+    // Coroutine 的核心逻辑入口
+    Action act() override
+    {
+      Service service;
+      auto dto = service.getLiveComment(id, page);
+      // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
+      return _return(controller->createDtoResponse(Status::CODE_200, dto));
+    }
+  };
+  ADD_CORS(LiveExplaGET,
+           "*",
+           "GET,POST,PUT,DELETE,OPTIONS",
+           "Content-Type, Authorization",
+           "3600");
+  ENDPOINT_ASYNC("GET", "/home/live/{id}/expla/{page}", LiveExplaGET)
+  {
+    ENDPOINT_ASYNC_INIT(LiveExplaGET)
+
+    // 从请求中解析 id
+    v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
+    // 从请求中解析 id
+    v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
+
+    // Coroutine 的核心逻辑入口
+    Action act() override
+    {
+      Service service;
+      auto dto = service.getLiveExpla(id, page);
+      // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
+      return _return(controller->createDtoResponse(Status::CODE_200, dto));
+    }
+  };
+  ADD_CORS(LiveFileGET,
+           "*",
+           "GET,POST,PUT,DELETE,OPTIONS",
+           "Content-Type, Authorization",
+           "3600");
+  ENDPOINT_ASYNC("GET", "/home/live/{id}/file/{page}", LiveFileGET)
+  {
+    ENDPOINT_ASYNC_INIT(LiveFileGET)
+
+    // 从请求中解析 id
+    v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
+    // 从请求中解析 id
+    v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
+
+    // Coroutine 的核心逻辑入口
+    Action act() override
+    {
+      Service service;
+      auto dto = service.getLiveFile(id, page);
+      // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
+      return _return(controller->createDtoResponse(Status::CODE_200, dto));
+    }
+  };
   //   /**
   //    * POST方法:添加一个新的用户
   //    * 参数:User信息列表(除了id) UserDto

@@ -2,7 +2,6 @@
 #ifndef USERSERVICE_HPP
 #define USERSERVICE_HPP
 
-
 #include "dto/DTOs.hpp"
 
 #include "oatpp/web/protocol/http/Http.hpp"
@@ -18,9 +17,13 @@ private:
 
 private:
   Dao dao;
+
 public:
   oatpp::Object<RUserDto> getUserById(const oatpp::Int64 &id);
   oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id);
+  oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, int64_t page);
+  oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, int64_t page);
+  oatpp::Object<RLiveFileDto> getLiveFile(const oatpp::Int64 &id, int64_t page);
 };
 
 #endif // CRUD_USERSERVICE_HPP
