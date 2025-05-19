@@ -20,6 +20,7 @@ private:
   Dao dao;
 public:
   oatpp::Object<RUserDto> getUserById(const oatpp::Int64 &id);
+  oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id);
 };
 
 #endif // CRUD_USERSERVICE_HPP
