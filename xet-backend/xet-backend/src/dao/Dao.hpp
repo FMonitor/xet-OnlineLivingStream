@@ -92,7 +92,7 @@ public:
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
     int64_t comments_offset = (total_comments_count > num) ? total_comments_count - num : 0;
 
-    auto result_comments_db = DBSession.sql("SELECT comment_id,living_stream_id,creator_user_id,created_at,content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+    auto result_comments_db = DBSession.sql("SELECT comment_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_comment WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                   .bind((int64_t)id)
                                   .bind((int64_t)num)
                                   .bind(comments_offset)
@@ -116,7 +116,7 @@ public:
     auto total_explanations_count = total_explanations_result.fetchOne()[0].get<int64_t>();
     int64_t explanations_offset = (total_explanations_count > num) ? total_explanations_count - num : 0;
 
-    auto result_explanations_db = DBSession.sql("SELECT expla_id,living_stream_id,creator_user_id,created_at,content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+    auto result_explanations_db = DBSession.sql("SELECT expla_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,content FROM live_explanation WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                       .bind((int64_t)id)
                                       .bind((int64_t)num)
                                       .bind(explanations_offset)
@@ -140,7 +140,7 @@ public:
     auto total_files_count = total_files_result.fetchOne()[0].get<int64_t>();
     int64_t files_offset = (total_files_count > num) ? total_files_count - num : 0;
 
-    auto result_files_db = DBSession.sql("SELECT file_id,living_stream_id,creator_user_id,created_at,file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
+    auto result_files_db = DBSession.sql("SELECT file_id,living_stream_id,creator_user_id,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,file_url FROM live_file WHERE living_stream_id = ? ORDER BY created_at LIMIT ? OFFSET ?")
                                .bind((int64_t)id)
                                .bind((int64_t)num)
                                .bind(files_offset)
