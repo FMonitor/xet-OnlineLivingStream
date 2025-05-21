@@ -6,9 +6,12 @@
 
 #include "oatpp/network/Server.hpp"
 
+#include "oatpp-swagger/AsyncController.hpp" //swagger:引入异步swagger头文件
+
 #include <iostream>
 
-void run() {
+void run()
+{
 
   /* Register Components in scope of run() method */
   AppComponent components;
@@ -22,14 +25,22 @@ void run() {
   /* 添加数据库增删改查API控制器 */
   router->addController(std::make_shared<LiveRoomController>());
 
-  //添加视频流Api控制器
+  // 数据库增删改查API控制器增加swagger文档
+  oatpp::web::server::api::Endpoints docEndpoints;
+  docEndpoints.append(router->addController(LiveRoomController::createShared())->getEndpoints());
+  router->addController(oatpp::swagger::AsyncController::createShared(docEndpoints));
+
+  // 添加视频流Api控制器
   router->addController(MediaController::createShared());
 
-  //添加websocket服务器Api控制器
+
+
+
+  // 添加websocket服务器Api控制器
   router->addController(std::make_shared<RoomsController>());
 
   /* Get connection handler component */
-  OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler,"http");
+  OATPP_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, connectionHandler, "http");
 
   /* Get connection provider component */
   OATPP_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, connectionProvider);
@@ -42,10 +53,10 @@ void run() {
 
   /* Run server */
   server.run();
-
 }
 
-int main(int argc, const char * argv[]) {
+int main(int argc, const char *argv[])
+{
 
   oatpp::base::Environment::init();
 

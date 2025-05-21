@@ -175,6 +175,16 @@ ADD_CORS(LiveCommentPOST,
          "GET,POST,PUT,DELETE,OPTIONS",
          "Content-Type, Authorization",
          "3600");
+ENDPOINT_INFO(LiveCommentPOST)
+{
+  info->summary = "Add comment";
+
+  info->addConsumes<Object<LiveCommentDto>>("application/json");
+
+  info->addResponse<Object<MessageDto>>(Status::CODE_200, "application/json");
+  info->addResponse<Object<StatusDto>>(Status::CODE_404, "application/json");
+  info->addResponse<Object<StatusDto>>(Status::CODE_500, "application/json");
+}
 ENDPOINT_ASYNC("POST", "/home/live/{id}/comment", LiveCommentPOST){
     ENDPOINT_ASYNC_INIT(LiveCommentPOST)
     // 异步端点中,端点逻辑需要包含在Action函数中

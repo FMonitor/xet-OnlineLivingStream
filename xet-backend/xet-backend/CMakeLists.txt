@@ -45,6 +45,8 @@ add_library(${project_name}-lib
         src/service/Service.cpp
         src/dao/Dao.hpp
         src/dto/DTOs.hpp
+        # swaggerui相关组件
+        src/SwaggerComponent.hpp
 )
 
 ## 主库头文件路径配置
@@ -55,7 +57,8 @@ target_include_directories(${project_name}-lib PUBLIC src)
 ################################################################################
 ## OATPP核心依赖
 find_package(oatpp 1.3.0 REQUIRED)
-find_package(oatpp-websocket 1.3.0 REQUIRED)
+find_package(oatpp-websocket 1.3.0 REQUIRED) # 加载swagger组件
+find_package(oatpp-swagger  1.3.0 REQUIRED)  # swaggerui相关组件
 find_package(mysql-concpp REQUIRED)  # 加载MySQL C++连接器模块
 ## Linux系统级依赖
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
@@ -69,6 +72,7 @@ target_link_libraries(${project_name}-lib PUBLIC
     oatpp::oatpp
     oatpp::oatpp-test
     oatpp::oatpp-websocket
+    PUBLIC oatpp::oatpp-swagger         # swaggerui相关组件
     mysql::concpp  # MySQL Connector/C++ 接口目标
 )
 
@@ -111,6 +115,9 @@ target_link_libraries(${project_name}-exe
 ## 全局预定义宏
 add_definitions(
     -DEXAMPLE_MEDIA_FOLDER="${CMAKE_CURRENT_LIST_DIR}/file"  ## 视频文件存储路径
+    ## define path to swagger-ui static resources folder
+    -DOATPP_SWAGGER_RES_PATH="${oatpp-swagger_INCLUDE_DIRS}/../bin/oatpp-swagger/res"         # swaggerui相关组件
+
 )
 
 ## 目标属性统一配置
