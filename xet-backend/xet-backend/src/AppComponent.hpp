@@ -1,13 +1,15 @@
 #ifndef AppComponent_hpp
 #define AppComponent_hpp
 
-#include "oatpp/web/server/AsyncHttpConnectionHandler.hpp"
+#include "oatpp/web/server/HttpConnectionHandler.hpp"
 #include "oatpp/web/server/HttpRouter.hpp"
 #include "oatpp/network/tcp/server/ConnectionProvider.hpp"
 
 #include "oatpp/parser/json/mapping/ObjectMapper.hpp"
 
 #include "oatpp/core/macro/component.hpp"
+
+#include "ErrorHandler.hpp"
 
 // 视频流相关组件的头文件
 #include "hls/Playlist.hpp"
@@ -29,7 +31,7 @@ public:
   /**
    *  Swagger 组件
    */
-  SwaggerComponent swaggerComponent;
+  // SwaggerComponent swaggerComponent;
 
   /**
    * Create Async Executor
@@ -40,6 +42,15 @@ public:
                                                                                   1 /* I/O threads */,
                                                                                   1 /* Timer threads */
                                                                               ); }());
+
+  /**
+   *  Create ObjectMapper component to serialize/deserialize DTOs in Contoller's API
+   */
+  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, apiObjectMapper)([]
+                                                                                               {
+    auto objectMapper = oatpp::parser::json::mapping::ObjectMapper::createShared();
+    objectMapper->getDeserializer()->getConfig()->allowUnknownFields = false;
+    return objectMapper; }());
 
   /**
    *  Create ConnectionProvider component which listens on the port
@@ -56,17 +67,20 @@ public:
   /**
    *  Create ConnectionHandler component which uses Router component to route requests
    */
+  // OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)("http", []
+  //                                                                                                     {
+  //   OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); // get Router component
+  //   OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor); // get Async executor component
+  //   return oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executor); }());
+
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ConnectionHandler>, serverConnectionHandler)("http", []
                                                                                                       {
-    OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router); // get Router component
-    OATPP_COMPONENT(std::shared_ptr<oatpp::async::Executor>, executor); // get Async executor component
-    return oatpp::web::server::AsyncHttpConnectionHandler::createShared(router, executor); }());
+                                                                                                        OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);           // get Router component
+                                                                                                        OATPP_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, objectMapper); // get ObjectMapper component
 
-  /**
-   *  Create ObjectMapper component to serialize/deserialize DTOs in Contoller's API
-   */
-  OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::data::mapping::ObjectMapper>, apiObjectMapper)([]
-                                                                                               { return oatpp::parser::json::mapping::ObjectMapper::createShared(); }());
+                                                                                                        auto connectionHandler = oatpp::web::server::HttpConnectionHandler::createShared(router);
+                                                                                                        connectionHandler->setErrorHandler(std::make_shared<ErrorHandler>(objectMapper));
+                                                                                                        return connectionHandler; }());
 
   /**
    *  添加文件相关组件

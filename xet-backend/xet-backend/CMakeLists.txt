@@ -11,8 +11,6 @@ project(${project_name})
 ## 主库文件集合（包含组件/控制器/服务/DAO层）
 add_library(${project_name}-lib
         src/AppComponent.hpp
-        src/controller/MyController.cpp
-        src/controller/MyController.hpp
         src/dto/DTOs.hpp
         src/ErrorHandler.hpp
         src/ErrorHandler.cpp
@@ -37,8 +35,6 @@ add_library(${project_name}-lib
         # 数据库相关组件
         src/MySQLComponent.hpp
         src/MySQLComponent.cpp
-        src/controller/MyController.cpp
-        src/controller/MyController.hpp
         src/controller/LiveRoom/LiveRoomController.cpp
         src/controller/LiveRoom/LiveRoomController.hpp
         src/service/Service.hpp
@@ -46,7 +42,7 @@ add_library(${project_name}-lib
         src/dao/Dao.hpp
         src/dto/DTOs.hpp
         # swaggerui相关组件
-        src/SwaggerComponent.hpp
+        # src/SwaggerComponent.hpp
 )
 
 ## 主库头文件路径配置
@@ -70,7 +66,6 @@ endif()
 ## 主库依赖链接（OATPP系列）
 target_link_libraries(${project_name}-lib PUBLIC
     oatpp::oatpp
-    oatpp::oatpp-test
     oatpp::oatpp-websocket
     PUBLIC oatpp::oatpp-swagger         # swaggerui相关组件
     mysql::concpp  # MySQL Connector/C++ 接口目标
@@ -95,15 +90,15 @@ target_link_libraries(${project_name}-exe ${project_name}-lib)
 add_dependencies(${project_name}-exe ${project_name}-lib)
 
 ## 测试程序构建
-add_executable(${project_name}-test
-    test/tests.cpp
-    test/app/TestComponent.hpp
-    test/app/MyApiTestClient.hpp
-    test/MyControllerTest.cpp
-    test/MyControllerTest.hpp
-)
-target_link_libraries(${project_name}-test ${project_name}-lib)
-add_dependencies(${project_name}-test ${project_name}-lib)
+# add_executable(${project_name}-test
+#     test/tests.cpp
+#     test/app/TestComponent.hpp
+#     test/app/MyApiTestClient.hpp
+#     test/MyControllerTest.cpp
+#     test/MyControllerTest.hpp
+# )
+# target_link_libraries(${project_name}-test ${project_name}-lib)
+# add_dependencies(${project_name}-test ${project_name}-lib)
 
 target_link_libraries(${project_name}-exe 
     ${project_name}-lib
@@ -121,7 +116,7 @@ add_definitions(
 )
 
 ## 目标属性统一配置
-set_target_properties(${project_name}-lib ${project_name}-exe ${project_name}-test PROPERTIES
+set_target_properties(${project_name}-lib ${project_name}-exe PROPERTIES
     CXX_STANDARD 17
     CXX_EXTENSIONS OFF
     CXX_STANDARD_REQUIRED ON

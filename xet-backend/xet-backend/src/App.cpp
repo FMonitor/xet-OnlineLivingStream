@@ -1,4 +1,3 @@
-#include "./controller/MyController.hpp"
 #include "./controller/MediaController.hpp"
 #include "./controller/LiveRoom/LiveRoomController.hpp"
 #include "./controller/RoomsController.hpp"
@@ -6,7 +5,7 @@
 
 #include "oatpp/network/Server.hpp"
 
-#include "oatpp-swagger/AsyncController.hpp" //swagger:引入异步swagger头文件
+// #include "oatpp-swagger/AsyncController.hpp" //swagger:引入异步swagger头文件
 
 #include <iostream>
 
@@ -19,22 +18,11 @@ void run()
   /* Get router component */
   OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
 
-  /* Create MyController and add all of its endpoints to router */
-  router->addController(std::make_shared<MyController>());
-
   /* 添加数据库增删改查API控制器 */
   router->addController(std::make_shared<LiveRoomController>());
 
-  // 数据库增删改查API控制器增加swagger文档
-  oatpp::web::server::api::Endpoints docEndpoints;
-  docEndpoints.append(router->addController(LiveRoomController::createShared())->getEndpoints());
-  router->addController(oatpp::swagger::AsyncController::createShared(docEndpoints));
-
   // 添加视频流Api控制器
   router->addController(MediaController::createShared());
-
-
-
 
   // 添加websocket服务器Api控制器
   router->addController(std::make_shared<RoomsController>());
