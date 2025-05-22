@@ -62,11 +62,6 @@ jobs:
             --lower_case_table_names=1
           echo install MySQL complete!.
 
-      - name: 开放3306和33060端口
-        run: |
-          sudo firewall-cmd --add-port 3306/tcp --permanent
-          sudo firewall-cmd --add-port 33060/tcp --permanent
-
       - name: 安装MySQL Connect/C++
         run: |
           curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
