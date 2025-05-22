@@ -4,7 +4,7 @@ name: dev-1-backend
 on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
-  
+
   push:
     branches: [ "dev-1-backend" ]
   pull_request:
@@ -35,7 +35,7 @@ jobs:
       - name: 安装最新版CMake
         run: |
           sudo apt install cmake
-          cmake -v
+          cmake --version
           
       - name: 安装oatpp
         run: |
