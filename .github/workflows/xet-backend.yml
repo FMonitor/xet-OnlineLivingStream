@@ -101,14 +101,15 @@ jobs:
 
       - name: 构建并运行后端
         run: |
-          cd xet-OnlineLivingStream/xet-backend/xet-backend-async
+          cd xet-backend/xet-backend-async
           mkdir build && cd build
           cmake .. && make
           ./xet-backend-async-exe &
-          cd ../xet-backend-sync
+          cd ../../xet-backend-sync
           mkdir build && cd build
           cmake .. && make
           ./xet-backend-sync-exe &
+          cd ../../..
           
           
       
