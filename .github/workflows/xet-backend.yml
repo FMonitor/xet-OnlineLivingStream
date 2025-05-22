@@ -22,7 +22,29 @@ jobs:
         with:
           ref: dev-1-backend
 
-      - name: 安装docker并安装简易测试MySQL数据库
+      - name: 升级apt
+        run: |
+          pwd
+          ls
+          sudo apt update
+          sudo apt upgrade
+
+      - name: 安装最新版git
+        run: |
+          sudo apt install git
+          git -v
+
+      - name: 安装最新版g++编译器
+        run: |
+          sudo apt install build-essential g++
+          g++ -v
+
+      - name: 安装最新版CMake
+        run: |
+          sudo apt install cmake
+          cmake --version
+
+      - name: 安装简易测试MySQL数据库
         run: |
           # sudo apt update
           # sudo apt upgrade
@@ -58,22 +80,6 @@ jobs:
           sudo dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
           sudo dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
           echo install MySQL Connect/C++ complete!.
-
-      - name: 安装最新版git
-        run: |
-          sudo apt update
-          sudo apt install git
-          git -v
-
-      - name: 安装最新版g++编译器
-        run: |
-          sudo apt install build-essential g++
-          g++ -v
-
-      - name: 安装最新版CMake
-        run: |
-          sudo apt install cmake
-          cmake --version
           
       - name: 安装oatpp
         run: |
