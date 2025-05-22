@@ -59,14 +59,14 @@ CREATE TABLE live_file (
 
 -- 添加示例用户
 INSERT INTO users (username, password, email, avatar_url) VALUES 
-('user1', 'password123', 'user1@example.com', 'http://localhost:8000/file/user_avatar_1.svg'),
-('user2', 'password456', 'user2@example.com', 'http://localhost:8000/file/user_avatar_2.svg'),
-('user3', 'password789', 'user3@example.com', 'http://localhost:8000/file/user_avatar_3.svg');
+('user1', 'password123', 'user1@example.com', 'http://localhost:8001/file/0.svg'),
+('user2', 'password456', 'user2@example.com', 'http://localhost:8001/file/user_avatar_2.svg'),
+('user3', 'password789', 'user3@example.com', 'http://localhost:8001/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
 INSERT INTO living_stream (creator_user_id, description, playback_url) VALUES 
-(1, '这是第一个直播间的介绍', 'http://localhost:8000/file/video1.mp4'),
-(2, '这是第二个直播间的介绍', 'http://localhost:8000/file/video2.mp4');
+(1, '这是第一个直播间的介绍', 'http://localhost:8001/file/video1.mp4'),
+(2, '这是第二个直播间的介绍', 'http://localhost:8001/file/video2.mp4');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 
@@ -77,8 +77,8 @@ INSERT INTO user_living_stream (user_id, living_stream_id) VALUES
 
 -- 为每个直播添加文件信息
 INSERT INTO live_file (living_stream_id, creator_user_id, file_url) VALUES 
-(1, 1, 'http://localhost:8000/file/playlist_live.m3u8'),
-(2, 2, 'http://localhost:8000/file/playlist_live.m3u8');
+(1, 1, 'http://localhost:8001/file/playlist_live.m3u8'),
+(2, 2, 'http://localhost:8001/file/playlist_live.m3u8');
 
 -- 为每个直播添加评论信息
 INSERT INTO live_comment (living_stream_id, creator_user_id, content) VALUES 
