@@ -43,7 +43,7 @@ jobs:
           cd oatpp
           git checkout 1.3.0-latest
           mkdir build && cd build
-          cmake .. && make install
+          cmake .. && sudo make install
           cd ../..
 
       - name: 安装oatpp-websocket
@@ -52,7 +52,7 @@ jobs:
           cd oatpp-websocket
           git checkout 1.3.0-latest
           mkdir build && cd build
-          cmake .. && make install
+          cmake .. && sudo make install
           cd ../..
       
       - name: 安装MySQL Connect/C++
@@ -62,11 +62,11 @@ jobs:
           curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
           curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
           curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
-          dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          dpkg -i libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
-          dpkg -i libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
-          dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
           echo install MySQL Connect/C++ complete!.
 
       - name: 构建并运行后端
