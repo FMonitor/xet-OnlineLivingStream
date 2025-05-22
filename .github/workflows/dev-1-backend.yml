@@ -69,6 +69,25 @@ jobs:
           sudo dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
           echo install MySQL Connect/C++ complete!.
 
+      - name: 安装docker并安装简易测试MySQL数据库
+        run: |
+          sudo apt-get install -y docker.io
+          sudo systemctl start docker
+          sudo systemctl enable docker
+          sudo docker pull mysql:8.0.20
+          docker run -id \
+            -p 3306:3306 \
+            -p 33060:33060 \
+            --name mysql8 \
+            --restart always \
+            -v $PWD/conf:/etc/mysql/conf.d \
+            -v $PWD/log:/var/log/mysql \
+            -v $PWD/data:/var/lib/mysql \
+            -e MYSQL_ROOT_PASSWORD=123456 \
+            mysql:8.0.20 \
+            --lower_case_table_names=1
+          echo install MySQL complete!.
+
       - name: 构建并运行后端
         run: |
           cd xet-OnlineLivingStream/xet-backend/xet-backend-async
