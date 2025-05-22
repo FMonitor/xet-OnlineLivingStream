@@ -21,6 +21,21 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: dev-1-backend
+          
+      - name: 安装MySQL Connect/C++
+        run: |
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          echo install MySQL Connect/C++ complete!.
+
       - name: 安装最新版git
         run: |
           sudo apt update
@@ -54,20 +69,6 @@ jobs:
           mkdir build && cd build
           cmake .. && sudo make install
           cd ../..
-      
-      - name: 安装MySQL Connect/C++
-        run: |
-          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
-          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
-          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
-          sudo dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          sudo dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
-          sudo dpkg -i libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
-          sudo dpkg -i libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
-          sudo dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
-          echo install MySQL Connect/C++ complete!.
 
       - name: 安装docker并安装简易测试MySQL数据库
         run: |
