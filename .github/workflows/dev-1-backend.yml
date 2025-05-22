@@ -40,8 +40,8 @@ jobs:
       - name: 安装oatpp
         run: |
           git clone https://github.com/oatpp/oatpp.git
-          git checkout 1.3.0-latest
           cd oatpp
+          git checkout 1.3.0-latest
           mkdir build && cd build
           cmake .. && make install
           cd ../..
@@ -49,8 +49,8 @@ jobs:
       - name: 安装oatpp-websocket
         run: |
           git clone https://github.com/oatpp/oatpp-websocket.git
-          git checkout 1.3.0-latest
           cd oatpp-websocket
+          git checkout 1.3.0-latest
           mkdir build && cd build
           cmake .. && make install
           cd ../..
