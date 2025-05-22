@@ -49,7 +49,6 @@ target_include_directories(${project_name}-lib PUBLIC src)
 ## OATPP核心依赖
 find_package(oatpp 1.3.0 REQUIRED)
 find_package(oatpp-websocket 1.3.0 REQUIRED) # 加载swagger组件
-find_package(oatpp-swagger  1.3.0 REQUIRED)  # swaggerui相关组件
 ## Linux系统级依赖
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
     find_package(Threads REQUIRED)          ## 线程库支持
@@ -61,7 +60,6 @@ endif()
 target_link_libraries(${project_name}-lib PUBLIC
     oatpp::oatpp
     oatpp::oatpp-websocket
-    PUBLIC oatpp::oatpp-swagger         # swaggerui相关组件
 )
 
 ## Linux系统库补充链接
