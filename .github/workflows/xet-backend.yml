@@ -24,8 +24,8 @@ jobs:
 
       - name: 安装docker并安装简易测试MySQL数据库
         run: |
-          sudo apt update
-          sudo apt upgrade
+          # sudo apt update
+          # sudo apt upgrade
           sudo docker pull mysql:8.0.20
           docker run -id \
             -p 3306:3306 \
