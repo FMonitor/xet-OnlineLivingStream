@@ -19,5 +19,7 @@ RUN mv xet-backend-sync-exe ../../package
 
 # 执行程序
 WORKDIR /app/package
-RUN chmod +x run.sh
-CMD ["/app/package/run.sh"]
+
+RUN chmod +x run.sh 
+CMD ["sh", "/app/package/run.sh"]
+

@@ -19,11 +19,32 @@ services:
       MYSQL_DATABASE: xet_living_table
       MYSQL_USER: app
       MYSQL_PASSWORD: 123456
-    ports:
-      - "3306:3306"
-      - "33060:33060"
+    volumes:
+      - ./backend/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
     networks:
       - app-network
+    
+  backend:
+    image: xet-backend-img
+    container_name: xet-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    networks:
+      - app-network
+
+  netdata:
+    image: netdata/netdata
+    container_name: netdata
+    restart: unless-stopped
+    ports:
+      - "19999:19999"
+    environment:
+      - DO_NOT_TRACK=YES
+    networks:
+      - app-network
+
 
 networks:
   app-network:
