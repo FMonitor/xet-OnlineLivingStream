@@ -64,4 +64,5 @@ RUN rm -r libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
 
 # 执行程序
 WORKDIR /app/package
+RUN chmod +x run.sh
 CMD ["/app/package/run.sh"]
