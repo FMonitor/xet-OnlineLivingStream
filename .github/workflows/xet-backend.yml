@@ -60,6 +60,7 @@ jobs:
             --lower_case_table_names=1
           echo install MySQL complete!.
 
+
       # 有疑问的地方:firewalld安装是否合理?难道我给别人安装一个后端还需要送firewalld?还帮别人开放3306?
       # 或许这根本就不是开发的责任
       # - name: 安装firewalld并开放3306和33060端口
