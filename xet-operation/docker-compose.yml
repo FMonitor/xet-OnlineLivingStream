@@ -18,6 +18,8 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: xet_living_table
       MYSQL_USER: app
+      MYSQL_USER: app
+      MYSQL_USER: app
       MYSQL_PASSWORD: 123456
     volumes:
       - ./backend/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -33,6 +35,8 @@ services:
       - "8001:8001"
     networks:
       - app-network
+    depends_on:
+      - mysql
 
   netdata:
     image: netdata/netdata
