@@ -257,12 +257,14 @@ function formatTime(timestamp: string): string {
     word-wrap: break-word;
     align-self: flex-start;
     font-size: 14px;
+    color: #000000;
 }
 
 /* 自己消息的气泡和元信息对齐方式 */
 .self-bubble {
     background-color: #9cc5e7;
     align-self: flex-end;
+    
 }
 
 .bubble.sending {

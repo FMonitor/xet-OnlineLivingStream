@@ -267,6 +267,7 @@ const systemNotification = '系统提示：直播内容及互动评论严禁传�
     word-wrap: break-word;
     align-self: flex-start;
     font-size: 14px;
+    color: #000000;
 }
 
 /* 自己消息的气泡和元信息对齐方式 */

@@ -3,7 +3,7 @@ import type { AxiosRequestConfig, AxiosResponse } from 'axios'
 
 // 配置 axios 默认设置
 const apiClient = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://lcmonitor.dynv6.net:8001', // 从环境变量获取基础URL
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://lcmonitor.dynv6.net', // 从环境变量获取基础URL
     timeout: 10000, // 请求超时时间
     headers: {
         'Content-Type': 'application/json'
@@ -129,6 +129,13 @@ export interface File {
     error?: boolean;
 }
 
+// 用户信息接口
+export interface User {
+    id: number;
+    name: string;
+    avatar_url?: string; // 头像URL
+}
+
 // API 方法
 export const liveAPI = {
     // 获取直播信息（包含评论、讲解、文件）
@@ -224,6 +231,42 @@ export const liveAPI = {
         } catch (error) {
             console.error('获取文件失败:', error);
             throw error;
+        }
+    }
+};
+
+// 用户相关的API
+export const userAPI = {
+    // 获取用户信息
+    fetchUserInfo: async (userId: number): Promise<ApiResponse<User>> => {
+        try {
+            const response = await apiClient.get(`/user/${userId}`);
+            return response.data;
+        } catch (error) {
+            console.error('获取用户信息失败:', error);
+            throw error;
+        }
+    },
+    
+    // 获取用户头像
+    fetchUserAvatar: async (userId: number): Promise<string> => {
+        try {
+            // 先尝试获取用户信息，看是否包含头像URL
+            const response = await apiClient.get(`/user/${userId}`);
+            const userData = response.data.data[0] as User;
+            
+            // 如果用户信息中包含头像URL，则返回该URL
+            if (userData && userData.avatar_url) {
+                return userData.avatar_url;
+            }
+            
+            // 如果用户信息中没有头像URL，则返回默认的头像URL格式
+            // 这里假设后端提供了获取头像的统一路径
+            return `${apiClient.defaults.baseURL}/file/avatar/${userId}.svg`;
+        } catch (error) {
+            console.error('获取用户头像失败:', error);
+            // 发生错误时返回默认头像URL
+            return `${apiClient.defaults.baseURL}/file/avatar/default.svg`;
         }
     }
 };

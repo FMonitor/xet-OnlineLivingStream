@@ -1,5 +1,7 @@
 CREATE DATABASE IF NOT EXISTS xet_living_table;
 USE xet_living_table;
+-- 修改数据库字符集
+ALTER DATABASE xet_living_table CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -57,16 +59,24 @@ CREATE TABLE live_file (
     FOREIGN KEY (creator_user_id) REFERENCES users(user_id)
 );
 
+-- 修改所有表的字符集
+ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE living_stream CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE user_living_stream CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE live_comment CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE live_explanation CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+ALTER TABLE live_file CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 -- 添加示例用户
 INSERT INTO users (username, password, email, avatar_url) VALUES 
-('user1', 'password123', 'user1@example.com', 'http://localhost:8001/file/0.svg'),
-('user2', 'password456', 'user2@example.com', 'http://localhost:8001/file/user_avatar_2.svg'),
-('user3', 'password789', 'user3@example.com', 'http://localhost:8001/file/user_avatar_3.svg');
+('user1', 'password123', 'user1@example.com', 'http://lcmonitor.dynv6.net/file/0.svg'),
+('user2', 'password456', 'user2@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_2.svg'),
+('user3', 'password789', 'user3@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
 INSERT INTO living_stream (creator_user_id, description, playback_url) VALUES 
-(1, '这是第一个直播间的介绍', 'http://localhost:8001/file/video1.mp4'),
-(2, '这是第二个直播间的介绍', 'http://localhost:8001/file/video2.mp4');
+(1, '这是第一个直播间的介绍', 'http://lcmonitor.dynv6.net/file/video1.mp4'),
+(2, '这是第二个直播间的介绍', 'http://lcmonitor.dynv6.net/file/video2.mp4');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 
@@ -77,8 +87,8 @@ INSERT INTO user_living_stream (user_id, living_stream_id) VALUES
 
 -- 为每个直播添加文件信息
 INSERT INTO live_file (living_stream_id, creator_user_id, file_url) VALUES 
-(1, 1, 'http://localhost:8001/file/playlist_live.m3u8'),
-(2, 2, 'http://localhost:8001/file/playlist_live.m3u8');
+(1, 1, 'http://lcmonitor.dynv6.net/file/playlist_live.m3u8'),
+(2, 2, 'http://lcmonitor.dynv6.net/file/playlist_live.m3u8');
 
 -- 为每个直播添加评论信息
 INSERT INTO live_comment (living_stream_id, creator_user_id, content) VALUES 
