@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS xet_living_table;
 USE xet_living_table;
 -- 修改数据库字符集
-ALTER DATABASE xet_living_table CHARACTER SET utf8 ;
+ALTER DATABASE xet_living_table CHARACTER SET utf8mb4 ;
 
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -60,12 +60,12 @@ CREATE TABLE live_file (
 );
 
 -- 修改所有表的字符集
-ALTER TABLE users CONVERT TO CHARACTER SET utf8;
-ALTER TABLE living_stream CONVERT TO CHARACTER SET utf8;
-ALTER TABLE user_living_stream CONVERT TO CHARACTER SET utf8;
-ALTER TABLE live_comment CONVERT TO CHARACTER SET utf8;
-ALTER TABLE live_explanation CONVERT TO CHARACTER SET utf8;
-ALTER TABLE live_file CONVERT TO CHARACTER SET utf8;
+ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4;
+ALTER TABLE living_stream CONVERT TO CHARACTER SET utf8mb4;
+ALTER TABLE user_living_stream CONVERT TO CHARACTER SET utf8mb4;
+ALTER TABLE live_comment CONVERT TO CHARACTER SET utf8mb4;
+ALTER TABLE live_explanation CONVERT TO CHARACTER SET utf8mb4;
+ALTER TABLE live_file CONVERT TO CHARACTER SET utf8mb4;
 
 -- 添加示例用户
 INSERT INTO users (username, password, email, avatar_url) VALUES 
