@@ -75,7 +75,7 @@ INSERT INTO users (username, password, email, avatar_url) VALUES
 
 -- 添加示例直播信息
 INSERT INTO living_stream (creator_user_id, description, playback_url) VALUES 
-(1, '这是第一个直播间的介绍', 'http://lcmonitor.dynv6.net/file/video1.mp4'),
+(1, '这是第一个直播间的介绍', 'https://lcmonitor.dynv6.net/file/video1.mp4'),
 (2, '这是第二个直播间的介绍', 'http://lcmonitor.dynv6.net/file/video2.mp4');
 
 -- 添加用户与直播关系
@@ -87,23 +87,50 @@ INSERT INTO user_living_stream (user_id, living_stream_id) VALUES
 
 -- 为每个直播添加文件信息
 INSERT INTO live_file (living_stream_id, creator_user_id, file_url) VALUES 
-(1, 1, 'http://lcmonitor.dynv6.net/file/playlist_live.m3u8'),
-(2, 2, 'http://lcmonitor.dynv6.net/file/playlist_live.m3u8');
+(1, 2, 'https://lcmonitor.dynv6.net/file/playlist_live.m3u8'),
+(2, 2, 'https://lcmonitor.dynv6.net/file/playlist_live.m3u8');
 
 -- 为每个直播添加评论信息
 INSERT INTO live_comment (living_stream_id, creator_user_id, content) VALUES 
-(1, 1, '直播1的第一条评论'),
-(1, 2, '直播1的第二条评论'),
-(1, 3, '直播1的第三条评论'),
-(1, 1, '直播1的第四条评论'),
-(2, 1, '直播2的第一条评论'),
-(2, 2, '直播2的第二条评论'),
-(2, 3, '直播2的第三条评论'),
-(2, 1, '直播2的第四条评论');
-
+(1, 1, 'comment1'),
+(1, 2, 'comment2'),
+(1, 3, 'comment3'),
+(1, 1, 'comment4'),
+(1, 2, 'comment5'),
+(1, 3, 'comment6'),
+(1, 1, 'comment7'),
+(1, 2, 'comment8'),
+(1, 3, 'comment9'),
+(1, 1, 'comment10'),
+(1, 2, 'comment11'),
+(1, 3, 'comment12'),
+(1, 4, 'comment13'),
+(1, 5, 'comment14'),
+(1, 6, 'comment15'),
+(1, 1, 'comment16'),
+(1, 2, 'comment17'),
+(1, 3, 'comment18'),
+(1, 4, 'comment19'),
+(1, 5, 'comment20'),
+(1, 6, 'comment21'),
+(1, 1, 'comment22'),
+(1, 2, 'comment23'),
+(1, 3, 'comment24'),
+(1, 4, 'comment25'),
+(1, 5, 'comment26'),
+(1, 6, 'comment27'),
+(1, 1, 'comment28'),
+(1, 2, 'comment29'),
+(1, 3, 'comment30')
 -- 为每个直播添加讲解信息
 INSERT INTO live_explanation (living_stream_id, creator_user_id, content) VALUES 
-(1, 1, '直播1的第一条讲解'),
-(1, 1, '直播1的第二条讲解'),
-(2, 2, '直播2的第一条讲解'),
-(2, 2, '直播2的第二条讲解');
+(1, 2, 'explanation1'),
+(1, 3, 'explanation2'),
+(1, 1, 'explanation3'),
+(1, 2, 'explanation4'),
+(1, 3, 'explanation5'),
+(1, 1, 'explanation6'),
+(1, 2, 'explanation7'),
+(1, 3, 'explanation8'),
+(1, 1, 'explanation9'),
+(1, 2, 'explanation10')
