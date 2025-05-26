@@ -1,0 +1,16 @@
+修改视频引用的双反斜杠-VideoPlayer.vue
+const videoSrc = ref('.\\video\\1.mp4')  // 默认播放源
+const lines = ref([
+  { name: '线路1', url: '.\\video\\1.mp4' },
+  { name: '线路2', url: '.\\video\\1.mp4' }
+])
+-App.vue-
+<script setup lang="ts">
+import VideoPlayer from '.\\components\\VideoPlayer.vue'
+import ChatBox from '.\\components\\ChatBox.vue'
+</script>
+-ChatBox.vue-
+import ExplanationTab from './ChatTabs/ExplanationTab.vue'
+import DiscussionTab from './ChatTabs/DiscussionTab.vue'
+import FileTab from './ChatTabs/FileTab.vue'
+

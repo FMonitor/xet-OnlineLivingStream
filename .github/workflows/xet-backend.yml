@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
 
   push:
-    branches: [ "dev-1-backend" ]
+    branches: [ "dev" ]
   pull_request:
-    branches: [ "dev-1-backend" ]
+    branches: [ "dev" ]
 
 
 

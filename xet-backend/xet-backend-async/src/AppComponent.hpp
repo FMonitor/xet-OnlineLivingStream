@@ -53,7 +53,7 @@ public:
    *  Create ConnectionProvider component which listens on the port
    */
   OATPP_CREATE_COMPONENT(std::shared_ptr<oatpp::network::ServerConnectionProvider>, serverConnectionProvider)([]
-                                                                                                              { return oatpp::network::tcp::server::ConnectionProvider::createShared({"localhost", 8001}); }());
+                                                                                                              { return oatpp::network::tcp::server::ConnectionProvider::createShared({"0.0.0.0", 8001, oatpp::network::Address::IP_4}); }());
 
   /**
    *  Create Router component
