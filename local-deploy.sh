@@ -5,7 +5,16 @@
 # 使用场景：内网 WSL 无法从 GitHub Actions 自动拉取代码部署
 
 set -e  # 出错即退出
-PROJECT_DIR="/home/monitor"
+
+# 获取脚本所在目录
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+PROJECT_DIR="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
+
+# 进入项目根目录
+cd "$PROJECT_DIR"
+echo "当前工作目录：$(pwd)"
+
+# PROJECT_DIR="/home/monitor"
 
 echo "1. 拉取/更新 GitHub dev 分支代码..."
 cd "$PROJECT_DIR"
