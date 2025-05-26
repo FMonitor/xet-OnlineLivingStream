@@ -27,5 +27,5 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no root@47.107.61.250 <<EOF
           cd /home/admin
-          /home/admin/xet-OnlineLivingStream/local-deploy
+          /home/admin/xet-OnlineLivingStream/local-deploy.sh
           EOF
