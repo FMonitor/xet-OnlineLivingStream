@@ -1,0 +1,119 @@
+
+name: dev-1-backend
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  push:
+    branches: [ "dev" ]
+  pull_request:
+    branches: [ "dev" ]
+
+
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v4
+        with:
+          ref: dev-1-backend
+
+      - name: 升级apt
+        run: |
+          sudo apt update
+          sudo apt upgrade
+
+      - name: 安装最新版git
+        run: |
+          sudo apt install git
+          git -v
+
+      - name: 安装最新版g++编译器
+        run: |
+          sudo apt install build-essential g++
+          g++ -v
+
+      - name: 安装最新版CMake
+        run: |
+          sudo apt install cmake
+          cmake --version
+
+      - name: 安装简易测试MySQL数据库
+        run: |
+          # sudo apt update
+          # sudo apt upgrade
+          sudo docker pull mysql:8.0.20
+          docker run -id \
+            -p 3306:3306 \
+            -p 33060:33060 \
+            --name mysql8 \
+            --restart always \
+            -v $PWD/conf:/etc/mysql/conf.d \
+            -v $PWD/log:/var/log/mysql \
+            -v $PWD/data:/var/lib/mysql \
+            -e MYSQL_ROOT_PASSWORD=123456 \
+            mysql:8.0.20 \
+            --lower_case_table_names=1
+          echo install MySQL complete!.
+
+
+      # 有疑问的地方:firewalld安装是否合理?难道我给别人安装一个后端还需要送firewalld?还帮别人开放3306?
+      # 或许这根本就不是开发的责任
+      # - name: 安装firewalld并开放3306和33060端口
+      #   run: |
+      #     sudo apt-get install firewalld
+      #     sudo systemctl start firewalld
+      #     sudo firewall-cmd --add-port 3306/tcp --permanent
+      #     sudo firewall-cmd --add-port 33060/tcp --permanent
+
+      - name: 安装MySQL Connect/C++
+        run: |
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
+          curl -LO https://dev.mysql.com/get/Downloads/Connector-C++/libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn-dev_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconnx2-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          sudo dpkg -i libmysqlcppconn10-dbgsym_9.3.0-1ubuntu24.04_amd64.deb
+          echo install MySQL Connect/C++ complete!.
+          
+      - name: 安装oatpp
+        run: |
+          git clone https://github.com/oatpp/oatpp.git
+          cd oatpp
+          git checkout 1.3.0-latest
+          mkdir build && cd build
+          cmake .. && sudo make install
+          cd ../..
+
+      - name: 安装oatpp-websocket
+        run: |
+          git clone https://github.com/oatpp/oatpp-websocket.git
+          cd oatpp-websocket
+          git checkout 1.3.0-latest
+          mkdir build && cd build
+          cmake .. && sudo make install
+          cd ../..
+
+      - name: 构建并运行后端
+        run: |
+          cd xet-backend/xet-backend-async
+          mkdir build && cd build
+          cmake .. && make
+          ./xet-backend-async-exe &
+          cd ../../xet-backend-sync
+          mkdir build && cd build
+          cmake .. && make
+          ./xet-backend-sync-exe &
+          cd ../../..
+          
+          
+      
+
