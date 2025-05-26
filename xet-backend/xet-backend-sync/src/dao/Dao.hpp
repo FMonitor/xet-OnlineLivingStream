@@ -65,7 +65,7 @@ public:
     DBSession.sql("USE xet_living_table").execute();
 
     // 查询直播信息
-    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,playback_url FROM living_stream WHERE living_stream_id = ?")
+    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url FROM living_stream WHERE living_stream_id = ?")
                               .bind((int64_t)id)
                               .execute();
 
@@ -84,12 +84,12 @@ public:
     livedto->living_stream_id = live_row[0].get<int64_t>();
     livedto->creator_user_id = live_row[1].get<int64_t>();
     livedto->description = live_row[2].get<std::string>();
-    livedto->playback_url = live_row[3].get<std::string>();
-
+    livedto->living_stream_url = live_row[3].get<std::string>();
+    livedto->living_comment_room_url = live_row[4].get<std::string>();
+    livedto->living_expla_room_url = live_row[5].get<std::string>();
+    livedto->living_broadcast_room_url = live_row[6].get<std::string>();
     // 查询评论总数并分页
-    auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?")
-                                     .bind((int64_t)id)
-                                     .execute();
+    auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
     livedto->page_count_comment = (total_comments_count % pagesize) == 0 ? (total_comments_count / pagesize) : (total_comments_count / pagesize) + 1;
     int64_t comments_offset = (total_comments_count > pagesize) ? total_comments_count - pagesize : 0;

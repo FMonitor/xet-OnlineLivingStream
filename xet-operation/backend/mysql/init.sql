@@ -17,9 +17,24 @@ CREATE TABLE living_stream (
     creator_user_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     description TEXT,
-    playback_url VARCHAR(255),
+    isliving BOOLEAN DEFAULT FALSE,
+    living_stream_url VARCHAR(255) DEFAULT NULL,
+    living_comment_room_url VARCHAR(255) DEFAULT NULL,
+    living_expla_room_url VARCHAR(255) DEFAULT NULL,
+    living_broadcast_room_url VARCHAR(255) DEFAULT NULL,
     FOREIGN KEY (creator_user_id) REFERENCES users(user_id)
 );
+
+DELIMITER $$
+CREATE TRIGGER set_room_url
+BEFORE INSERT ON living_stream
+FOR EACH ROW
+BEGIN
+  SET NEW.living_comment_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_comment_room/?nickname=');
+  SET NEW.living_expla_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_expla_room/?nickname=');
+  SET NEW.living_broadcast_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_broadcast_room/?nickname=');
+END$$
+DELIMITER ;
 
 CREATE TABLE user_living_stream (
     user_id INT NOT NULL,
@@ -74,9 +89,9 @@ INSERT INTO users (username, password, email, avatar_url) VALUES
 ('user3', 'password789', 'user3@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
-INSERT INTO living_stream (creator_user_id, description, playback_url) VALUES 
-(1, '这是第一个直播间的介绍', 'https://lcmonitor.dynv6.net/file/video1.mp4'),
-(2, '这是第二个直播间的介绍', 'http://lcmonitor.dynv6.net/file/video2.mp4');
+INSERT INTO living_stream (creator_user_id, description) VALUES 
+(1, '这是第一个直播间的介绍'),
+(2, '这是第二个直播间的介绍');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 

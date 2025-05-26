@@ -82,7 +82,10 @@ class LiveDto : public oatpp::DTO
   DTO_FIELD(Int64, living_stream_id);
   DTO_FIELD(Int64, creator_user_id);
   DTO_FIELD(String, description);
-  DTO_FIELD(String, playback_url);
+  DTO_FIELD(String, living_stream_url);
+  DTO_FIELD(String, living_comment_room_url);
+  DTO_FIELD(String, living_expla_room_url);
+  DTO_FIELD(String, living_broadcast_room_url);
   DTO_FIELD(Int64, page_count_comment);
   DTO_FIELD(Int64, page_count_explanation);
   DTO_FIELD(Int64, page_count_file);
