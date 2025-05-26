@@ -1,15 +1,37 @@
 # xet-OnlineLivingStream
 
-小鹅通项目：一个简易的在线直播间，支持直播与观看回放的功能
+本项目为一个轻量级直播互动平台，包含前端展示、后端服务与部署管理三部分，特性包括前后端分离、消息推送、用户交互和文件下载。
+
+## 项目目录结构：
 
 ```
-项目结构：
-xet-OnlineLivingStream
-|-documents 项目开发相关文档
-|-xet-backend 后端相关文件
-|-xet-frontend 前端相关文件
-|-xet-operation 运维相关文件
+xet-project/
+├── document/              # 项目文档存放目录（目前为空）
+├── xet-backend/           # 后端代码目录
+│   ├── xet-backend-async/ # 异步 Oatpp 后端服务（CMake 主目录）
+│   └── xet-backend-sunc/  # 同步 Oatpp 后端服务（CMake 主目录）
+├── xet-frontend/          # 前端 Vue 项目（Vite + npm）
+├── xet-operation/         # 运维部署目录，包括Dockerfile，docker-compose.yml等
+└── README.md              # 项目说明文档
 ```
+
+## CI/CD 流程说明
+
+项目采用简易 CI/CD 流程，支持从 GitHub 自动构建和部署：
+
+1. 从 dev 分支拉取最新前后端代码
+2. 前端构建
+  - 使用 npm run build 生成 dist 目录
+3. 后端构建
+  - CMake + Oatpp 编译同步或异步后端
+4. 生成 SSL 证书
+  - 使用现有 PEM 文件
+5. 打包镜像
+  - 前端 + nginx 打包为 xet-frontend-img
+  - 后端编译产物打包为 xet-backend-img
+6. 拉取基础镜像
+  - MySQL、Portainer 等必要服务
+7. 通过 docker-compose 启动所有服务
 
 ## 开发环境
 
