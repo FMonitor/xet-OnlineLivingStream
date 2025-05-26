@@ -2,18 +2,35 @@
 
 本项目为一个轻量级直播互动平台，包含前端展示、后端服务与部署管理三部分，特性包括前后端分离、消息推送、用户交互和文件下载。
 
+## 技术栈
+
+![Static Badge](https://img.shields.io/badge/Oatpp-blue?style=social&logo=oatpp&logoColor=%23000000)  
+![Static Badge](https://img.shields.io/badge/Mysql%20Connector%2FC%2B%2B-blue?style=social&logo=mysql&logoColor=%2304479C)  
+![Static Badge](https://img.shields.io/badge/Nginx-blue?style=social&logo=nginx&logoColor=%23009688)  
+![Static Badge](https://img.shields.io/badge/Docker-blue?style=social&logo=docker&logoColor=%23009688)  
+![Static Badge](https://img.shields.io/badge/Vue%2BVite-blue?style=social&logo=vuedotjs&logoColor=%2341B883)  
+![Static Badge](https://img.shields.io/badge/Node.js-blue?style=social&logo=nodedotjs&logoColor=%23339933)  
+
 ## 项目目录结构：
 
 ```
 xet-project/
 ├── document/              # 项目文档存放目录（目前为空）
 ├── xet-backend/           # 后端代码目录
+|   |-package 打包相关文件
 │   ├── xet-backend-async/ # 异步 Oatpp 后端服务（CMake 主目录）
 │   └── xet-backend-sunc/  # 同步 Oatpp 后端服务（CMake 主目录）
 ├── xet-frontend/          # 前端 Vue 项目（Vite + npm）
 ├── xet-operation/         # 运维部署目录，包括Dockerfile，docker-compose.yml等
 └── README.md              # 项目说明文档
 ```
+
+## Docker结构
+
+- xet-backend-img: 后端编译镜像，包括同步和异步服务器
+- xet-frontend-img: 基于Nginx打包的前端编译镜像
+- Mysql: MySQL 数据库镜像
+- Portainer: 管理 Docker 容器的可视化工具镜像
 
 ## CI/CD 流程说明
 

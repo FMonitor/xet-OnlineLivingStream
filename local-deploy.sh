@@ -41,4 +41,4 @@ cd "$PROJECT_DIR/xet-OnlineLivingStream"
 docker-compose -f './xet-operation/docker-compose.yml' --project-name 'xet-operation' down 
 docker-compose -f './xet-operation/docker-compose.yml' up -d --build
 
-echo "部署完成！请访问：https://lcmonitor.dynv6.net"
+echo "部署完成！请访问：https://lcmonitor.dynv6.net/live/1"
