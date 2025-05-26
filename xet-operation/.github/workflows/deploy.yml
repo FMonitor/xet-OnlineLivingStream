@@ -1,0 +1,44 @@
+name: Frontend CI/CD
+
+on:
+  push:
+    branches: [ dev ]  # dev 分支触发部署
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # 设定 ssh 连接，拉取到你的 WSL 主机
+    - name: Deploy to WSL Host
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.WSL_HOST }}
+        username: ${{ secrets.WSL_USER }}
+        key: ${{ secrets.WSL_SSH_PRIVATE_KEY }}
+        port: 22
+        script: |
+          echo "拉取最新代码"
+          cd ~/xet-OnlineLivingStream
+          git checkout dev
+          git pull origin dev
+
+          echo "执行初始化脚本（首次部署或更新）"
+          chmod +x ./xet-operation/deploy-init.sh
+          ./xet-operation/deploy-init.sh
+
+          echo "开始前端打包并构建 Docker 镜像"
+          docker build -t xet-frontend:dev ./xet-frontend \
+            -f ./xet-operation/Dockerfile.frontend
+
+          echo "启动前端容器（带反代挂载）"
+          docker compose -f ./xet-operation/docker-compose.yml up -d xet-frontend
+
+          echo "前端服务已更新并运行完毕"
+
+          # 你可以在这里留空用于后端操作
+          
+  
