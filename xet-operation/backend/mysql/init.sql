@@ -89,9 +89,9 @@ INSERT INTO users (username, password, email, avatar_url) VALUES
 ('user3', 'password789', 'user3@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
-INSERT INTO living_stream (creator_user_id, description) VALUES 
-(1, '这是第一个直播间的介绍'),
-(2, '这是第二个直播间的介绍');
+INSERT INTO living_stream (creator_user_id, description, living_stream_url) VALUES 
+(1, '这是第一个直播间的介绍' ,'0'),
+(2, '这是第二个直播间的介绍' ,'0');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 
