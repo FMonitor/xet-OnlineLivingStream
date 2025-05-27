@@ -28,6 +28,8 @@ jobs:
           ssh -o StrictHostKeyChecking=no root@47.107.61.250 <<EOF
           cd /home/admin
           cd xet-OnlineLivingStream
-          git branch
+          git switch dev2 
+          git pull origin dev2
+          cd ..
           /home/admin/xet-OnlineLivingStream/local-deploy.sh
           EOF
