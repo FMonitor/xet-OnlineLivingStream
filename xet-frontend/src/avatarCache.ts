@@ -1,60 +1,92 @@
+// src/avatarCache.ts
+import { ref } from 'vue';
 import { userAPI } from './api';
 import defaultAvatar from '@/assets/avatar/default.svg';
 
 const avatarCache = new Map<number, string>();
+// 添加响应式触发器
+const avatarUpdateTrigger = ref(0);
 
-/**
- * 获取用户头像 URL，优先从缓存中获取
- * 如果缓存中没有，则从服务器获取并存入缓存
- * @param userId 用户 ID
- * @returns 头像 URL，如果正在加载则返回默认头像
- */
 export async function getAvatarAsync(userId: number): Promise<string> {
+  // console.log(`开始异步获取用户 ${userId} 的头像`);
+  
   if (avatarCache.has(userId)) {
-    return avatarCache.get(userId)!; // 从缓存中获取头像 URL
+    // console.log(`用户 ${userId} 的头像已在缓存中:`, avatarCache.get(userId));
+    return avatarCache.get(userId)!;
   }
 
   try {
-    // 从服务器获取头像 URL
+    // console.log(`从服务器请求用户 ${userId} 的头像`);
     const avatarUrl = await userAPI.fetchUserAvatar(userId);
+    // console.log(`用户 ${userId} 的头像URL:`, avatarUrl);
     
-    // 预加载头像图片
+    // 验证图片是否可以加载
     const img = new Image();
+    img.crossOrigin = 'anonymous'; // 添加跨域支持
     img.src = avatarUrl;
     
     return new Promise((resolve) => {
       img.onload = () => {
-        // 图片加载完成后存入缓存
+        console.log(`用户 ${userId} 的头像加载成功:`, avatarUrl);
         avatarCache.set(userId, avatarUrl);
-        console.log(`Avatar for user ${userId} has been cached.`);
+        
+        // 触发响应式更新
+        avatarUpdateTrigger.value++;
+        
         resolve(avatarUrl);
       };
       
-      img.onerror = () => {
-        console.error(`Failed to load avatar for user ${userId}: ${avatarUrl}`);
-        avatarCache.set(userId, defaultAvatar); // 使用默认头像
-        console.log(`Default avatar for user ${userId} has been cached.`);
+      img.onerror = (error) => {
+        console.error(`用户 ${userId} 的头像加载失败:`, avatarUrl, error);
+        avatarCache.set(userId, defaultAvatar);
+        
+        // 触发响应式更新
+        avatarUpdateTrigger.value++;
+        
         resolve(defaultAvatar);
       };
+      
+      // 添加超时处理
+      setTimeout(() => {
+        if (!avatarCache.has(userId)) {
+          console.warn(`用户 ${userId} 的头像加载超时，使用默认头像`);
+          avatarCache.set(userId, defaultAvatar);
+          avatarUpdateTrigger.value++;
+          resolve(defaultAvatar);
+        }
+      }, 5000); // 5秒超时
     });
   } catch (error) {
-    console.error(`Error fetching avatar for user ${userId}:`, error);
+    console.error(`获取用户 ${userId} 头像时发生错误:`, error);
     avatarCache.set(userId, defaultAvatar);
+    avatarUpdateTrigger.value++;
     return defaultAvatar;
   }
 }
 
-/**
- * 同步获取用户头像 URL，如果缓存中没有则返回默认头像并异步加载
- * @param userId 用户 ID
- * @returns 头像 URL
- */
 export function getAvatar(userId: number): string {
+  // console.log(`同步获取用户 ${userId} 的头像`);
+  
+  // 触发响应式依赖收集
+  avatarUpdateTrigger.value;
+  
   if (avatarCache.has(userId)) {
-    return avatarCache.get(userId)!;
+    const cachedUrl = avatarCache.get(userId)!;
+    // console.log(`用户 ${userId} 的头像已在缓存中，返回:`, cachedUrl);
+    return cachedUrl;
   }
   
-  // 如果缓存中没有，先返回默认头像，同时异步加载
-  getAvatarAsync(userId).then(); // 异步加载但不等待结果
+  // console.log(`用户 ${userId} 的头像不在缓存中，开始异步加载...`);
+  
+  // 异步加载头像
+  getAvatarAsync(userId).then((url) => {
+    console.log(`用户 ${userId} 的头像异步加载完成:`, url);
+  }).catch((error) => {
+    // console.error(`用户 ${userId} 的头像异步加载失败:`, error);
+  });
+  
   return defaultAvatar;
 }
+
+// 导出响应式触发器供组件使用
+export { avatarUpdateTrigger };

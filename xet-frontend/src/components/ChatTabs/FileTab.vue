@@ -20,8 +20,8 @@
             <div :class="['file-bubble', file.isSelf ? 'self' : 'other']">
                 <!-- 他人文件消息（左侧） -->
                 <div v-if="!file.isSelf" class="file-left">
-                    <img class="avatar" :src="getAvatar(file.uploader.id)" @error="handleAvatarError($event)"
-                        alt="avatar" />
+                    <img class="avatar" :src="getReactiveAvatar(file.uploader.id ?? 0)"
+                        @error="handleAvatarError($event, file.uploader.id ?? 0)" alt="avatar" />
                     <div class="file-content">
                         <div class="meta">
                             <span class="name">{{ file.uploader.name }}</span>
@@ -54,8 +54,8 @@
                             <button class="download-btn" @click="downloadFile(file.url)">下载</button>
                         </div>
                     </div>
-                    <img class="avatar" :src="getAvatar(file.uploader.id)" @error="handleAvatarError($event)"
-                        alt="avatar" />
+                    <img class="avatar" :src="getReactiveAvatar(file.uploader.id ?? 0)"
+                        @error="handleAvatarError($event, file.uploader.id ?? 0)" alt="avatar" />
                 </div>
             </div>
         </div>
@@ -70,7 +70,7 @@
 <script setup lang="ts">
 import { defineProps, defineEmits, ref, computed, watch, nextTick, onMounted } from 'vue';
 import type { File } from '../../api';
-import { getAvatar } from '../../avatarCache'; // 引入头像缓存工具
+import { getAvatar, avatarUpdateTrigger } from '../../avatarCache'; // 引入头像缓存工具
 
 const fileIcons = import.meta.glob('../../assets/icon/*.svg');
 
@@ -136,10 +136,22 @@ watch(() => props.files.length, (newCount, oldCount) => {
     }
 });
 
-function handleAvatarError(event: Event) {
+const getReactiveAvatar = computed(() => {
+    avatarUpdateTrigger.value;
+
+    return (userId: number) => {
+        const avatarUrl = getAvatar(userId);
+        // console.log(`响应式获取用户 ${userId} 头像:`, avatarUrl);
+        return avatarUrl;
+    };
+});
+
+function handleAvatarError(event: Event, userId: number) {
     const img = event.target as HTMLImageElement;
-    img.src = getAvatar(0); // 使用默认头像的用户ID
+    console.warn(`用户 ${userId} 的头像加载失败，使用默认头像`);
+    img.src = getAvatar(0);
 }
+
 
 // 格式化文件大小
 function formatFileSize(size: number): string {
@@ -338,7 +350,7 @@ const systemNotification = '系统提示：上传的文件仅用于学习交流�
 
 .file-name {
     font-size: 14px;
-    font-weight: bold;  
+    font-weight: bold;
     color: #333;
     margin-bottom: 4px;
     overflow-wrap: break-word;

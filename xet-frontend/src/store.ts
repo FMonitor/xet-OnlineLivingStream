@@ -6,8 +6,8 @@ import { wsManager } from './services/websocket';
 
 // 添加 API 响应类型定义
 interface ApiResponse<T> {
-    statuscode: number;
-    msg: string;
+    statusCode: number;
+    message: string;
     data: T[];
 }
 
@@ -70,10 +70,10 @@ export const useLiveStore = defineStore('live', () => {
     function setCurrentUserId(userId: number) {
         currentUserId.value = userId;
         userSelected.value = true;
-        
+
         // 持久化到localStorage
         localStorage.setItem('selectedUserId', userId.toString());
-        
+
         console.log(`用户已切换为: ${userId}`);
     }
 
@@ -98,29 +98,50 @@ export const useLiveStore = defineStore('live', () => {
     }
 
     // === 直播业务方法（保持原有逻辑）===
-    function transformComment(newComment: Comment): Comment {
-        return {
-            ...newComment,
-            creator_user_id: newComment.user_id,
-            living_stream_id: currentLiveId.value || 0
+    // 修正数据转换函数
+    function transformComment(comment: Comment): Comment {
+        console.log('转换评论数据:', comment);
+
+        // 不要覆盖已有的正确数据，直接返回原始数据
+        const transformedComment = {
+            ...comment,
+            // 确保 creator_user_id 是正确的，优先使用原始数据
+            creator_user_id: comment.creator_user_id || comment.user_id || 0,
+            living_stream_id: comment.living_stream_id || currentLiveId.value || 0
         };
+
+        console.log('转换后的评论数据:', transformedComment);
+        return transformedComment;
     }
 
-    function transformExplanation(newExplanation: Explanation): Explanation {
-        return {
-            ...newExplanation,
-            expla_id: newExplanation.explanation_id,
-            creator_user_id: newExplanation.user_id,
-            living_stream_id: currentLiveId.value || 0
+    function transformExplanation(explanation: Explanation): Explanation {
+        console.log('转换讲解数据:', explanation);
+
+        // 不要覆盖已有的正确数据
+        const transformedExplanation = {
+            ...explanation,
+            // 确保 ID 字段正确
+            expla_id: explanation.expla_id || explanation.explanation_id || 0,
+            // 确保 creator_user_id 是正确的
+            creator_user_id: explanation.creator_user_id || explanation.user_id || 0,
+            living_stream_id: explanation.living_stream_id || currentLiveId.value || 0
         };
+
+        console.log('转换后的讲解数据:', transformedExplanation);
+        return transformedExplanation;
     }
 
-    function transformFile(newFile: File): File {
-        return {
-            ...newFile,
-            creator_user_id: newFile.user_id,
-            living_stream_id: currentLiveId.value || 0
+    function transformFile(file: File): File {
+        console.log('转换文件数据:', file);
+
+        const transformedFile = {
+            ...file,
+            creator_user_id: file.creator_user_id || file.user_id || 0,
+            living_stream_id: file.living_stream_id || currentLiveId.value || 0
         };
+
+        console.log('转换后的文件数据:', transformedFile);
+        return transformedFile;
     }
 
     // 加载直播信息（包含初始评论、讲解、文件）
@@ -133,8 +154,9 @@ export const useLiveStore = defineStore('live', () => {
         try {
             const apiResponse = await liveAPI.fetchLiveInfo(liveId);
 
-            if (apiResponse.statuscode !== 200) {
-                throw new Error(apiResponse.msg || '获取直播信息失败');
+            // 使用正确的字段名检查响应
+            if (apiResponse.statusCode !== 200) {
+                throw new Error(apiResponse.message || '获取直播信息失败');
             }
 
             if (!apiResponse.data || !apiResponse.data.length) {
@@ -142,41 +164,49 @@ export const useLiveStore = defineStore('live', () => {
             }
 
             liveInfo.value = apiResponse.data[0];
+            console.log('设置liveInfo:', liveInfo.value);
 
-            // 更新状态变量
-            liveTitle.value = liveInfo.value.living_stream_title;
-            liveCoverUrl.value = liveInfo.value.living_stream_cover_url;
-            isLiving.value = liveInfo.value.isliving === 1;
+            // 更新状态变量 - 使用实际字段名
+            liveTitle.value = liveInfo.value.description || `直播间 ${liveId}`;
+            liveCoverUrl.value = ''; // 实际响应中没有封面URL
+            isLiving.value = liveInfo.value.living_stream_url !== "0";
             commentRoomUrl.value = liveInfo.value.living_comment_room_url;
             explanationRoomUrl.value = liveInfo.value.living_expla_room_url;
             broadcastRoomUrl.value = liveInfo.value.living_broadcast_room_url;
 
-            if (liveInfo.value.living_stream_url) {
+            // 设置播放地址
+            if (liveInfo.value.living_stream_url && liveInfo.value.living_stream_url !== "0") {
                 playback_url.value = liveInfo.value.living_stream_url;
             }
 
-            // 初始化数据
-            if (liveInfo.value.live_comment) {
+            // 初始化数据 - 使用正确的字段名
+            if (liveInfo.value.comments && Array.isArray(liveInfo.value.comments)) {
                 comments.length = 0;
-                const transformedComments = liveInfo.value.live_comment.map(transformComment);
+                console.log('加载评论数据:', liveInfo.value.comments.length, '条');
+                const transformedComments = liveInfo.value.comments.map(transformComment);
                 comments.push(...transformedComments);
             }
 
-            if (liveInfo.value.live_explanation) {
+            if (liveInfo.value.explanations && Array.isArray(liveInfo.value.explanations)) {
                 explanations.length = 0;
-                const transformedExplanations = liveInfo.value.live_explanation.map(transformExplanation);
+                console.log('加载讲解数据:', liveInfo.value.explanations.length, '条');
+                const transformedExplanations = liveInfo.value.explanations.map(transformExplanation);
                 explanations.push(...transformedExplanations);
             }
 
-            if (liveInfo.value.live_file) {
+            if (liveInfo.value.files && Array.isArray(liveInfo.value.files)) {
                 files.length = 0;
-                const transformedFiles = liveInfo.value.live_file.map(transformFile);
+                console.log('加载文件数据:', liveInfo.value.files.length, '条');
+                const transformedFiles = liveInfo.value.files.map(transformFile);
                 files.push(...transformedFiles);
             }
 
-            commentPage.value = liveInfo.value.live_comment && liveInfo.value.live_comment.length > 0 ? 1 : 0;
-            explanationPage.value = liveInfo.value.live_explanation && liveInfo.value.live_explanation.length > 0 ? 1 : 0;
-            filePage.value = liveInfo.value.live_file && liveInfo.value.live_file.length > 0 ? 1 : 0;
+            // 使用实际的页数信息
+            commentPage.value = liveInfo.value.page_count_comment || 0;
+            explanationPage.value = liveInfo.value.page_count_explanation || 0;
+            filePage.value = liveInfo.value.page_count_file || 0;
+
+            console.log('数据加载完成 - 评论:', comments.length, '讲解:', explanations.length, '文件:', files.length);
 
         } catch (e) {
             error.value = e instanceof Error ? e.message : '加载直播信息失败';
@@ -209,11 +239,11 @@ export const useLiveStore = defineStore('live', () => {
     // 发送消息方法 - 使用当前用户ID
     async function sendComment(content: string): Promise<boolean> {
         if (!currentLiveId.value || !currentUserId.value) return false;
-        
+
         try {
             await wsManager.sendMessage('comment', content);
             const response = await liveAPI.addComment(currentLiveId.value, content, currentUserId.value);
-            return response.statuscode === 200;
+            return response.statusCode === 200;
         } catch (e) {
             error.value = e instanceof Error ? e.message : '添加评论失败';
             throw e;
@@ -222,11 +252,11 @@ export const useLiveStore = defineStore('live', () => {
 
     async function sendExplanation(content: string): Promise<boolean> {
         if (!currentLiveId.value || !currentUserId.value) return false;
-        
+
         try {
             await wsManager.sendMessage('explanation', content);
             const response = await liveAPI.addExplanation(currentLiveId.value, content, currentUserId.value);
-            return response.statuscode === 200;
+            return response.statusCode === 200;
         } catch (e) {
             error.value = e instanceof Error ? e.message : '添加讲解失败';
             throw e;
@@ -239,14 +269,14 @@ export const useLiveStore = defineStore('live', () => {
         try {
             const addResponse = await liveAPI.addFile(currentLiveId.value, fileUrl, currentUserId.value);
 
-            if (addResponse.statuscode !== 200) {
-                throw new Error(addResponse.msg || '添加文件失败');
+            if (addResponse.statusCode !== 200) {
+                throw new Error(addResponse.message || '添加文件失败');
             }
 
             const response = await liveAPI.fetchFilesByPage(currentLiveId.value, 1);
 
-            if (response.statuscode !== 200) {
-                throw new Error(response.msg || '刷新文件列表失败');
+            if (response.statusCode !== 200) {
+                throw new Error(response.message || '刷新文件列表失败');
             }
 
             filePage.value = 1;
@@ -258,15 +288,15 @@ export const useLiveStore = defineStore('live', () => {
         }
     }
 
-    // 加载更多数据方法（保持原有逻辑）
+    // 加载更多数据方法 - 适配新的响应格式
     async function loadMoreComments() {
         if (!currentLiveId.value || commentPage.value <= 0) return;
         isLoadingComments.value = true;
         try {
             const response = await liveAPI.fetchCommentsByPage(currentLiveId.value, commentPage.value);
 
-            if (response.statuscode !== 200) {
-                throw new Error(response.msg || '获取评论失败');
+            if (response.statusCode !== 200) {
+                throw new Error(response.message || '获取评论失败');
             }
 
             const newComments = (response.data || []).map(transformComment);
@@ -285,8 +315,8 @@ export const useLiveStore = defineStore('live', () => {
         try {
             const response = await liveAPI.fetchExplanationsByPage(currentLiveId.value, explanationPage.value);
 
-            if (response.statuscode !== 200) {
-                throw new Error(response.msg || '获取讲解失败');
+            if (response.statusCode !== 200) {
+                throw new Error(response.message || '获取讲解失败');
             }
 
             const newExplanations = (response.data || []).map(transformExplanation);
@@ -305,8 +335,8 @@ export const useLiveStore = defineStore('live', () => {
         try {
             const response = await liveAPI.fetchFilesByPage(currentLiveId.value, filePage.value);
 
-            if (response.statuscode !== 200) {
-                throw new Error(response.msg || '获取文件失败');
+            if (response.statusCode !== 200) {
+                throw new Error(response.message || '获取文件失败');
             }
 
             const newFiles = (response.data || []).map(transformFile);
@@ -330,14 +360,14 @@ export const useLiveStore = defineStore('live', () => {
         commentPage.value = 1;
         explanationPage.value = 1;
         filePage.value = 1;
-        
+
         liveTitle.value = '';
         liveCoverUrl.value = '';
         isLiving.value = false;
         commentRoomUrl.value = '';
         explanationRoomUrl.value = '';
         broadcastRoomUrl.value = '';
-        
+
         disconnectFromChat();
     }
 

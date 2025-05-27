@@ -22,8 +22,10 @@
         <div v-for="msg in formattedMessages" :key="msg.id" :class="['message-item', msg.isSelf ? 'self' : 'other']">
             <!-- 他人消息（左侧） -->
             <div v-if="!msg.isSelf" class="message-left">
-                <img class="avatar" :src="getAvatar(msg.creator_user_id)" @error="handleAvatarError($event)"
-                    alt="avatar" />
+                <img class="avatar" 
+                     :src="getReactiveAvatar(msg.creator_user_id ?? 0)" 
+                     @error="handleAvatarError($event, msg.creator_user_id ?? 0)"
+                     alt="avatar" />
                 <div class="message-content">
                     <div class="meta">
                         <span class="name">{{ msg.creator_user_id === 0 ? '匿名用户' : '用户' + msg.creator_user_id + ' '
@@ -52,15 +54,17 @@
                         </div>
                     </div>
                 </div>
-                <img class="avatar" :src="getAvatar(msg.creator_user_id)" @error="handleAvatarError($event)"
-                    alt="avatar" />
+                <img class="avatar" 
+                     :src="getReactiveAvatar(msg.creator_user_id ?? 0)" 
+                     @error="handleAvatarError($event, msg.creator_user_id ?? 0)"
+                     alt="avatar" />
             </div>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { getAvatar } from '../../avatarCache'; // 引入头像缓存工具
+import { getAvatar, avatarUpdateTrigger } from '../../avatarCache'; // 引入头像缓存工具
 import { defineProps, defineEmits, ref, computed, watch, nextTick, onMounted } from 'vue'
 import type { Comment, Explanation } from '../../api'
 
@@ -97,9 +101,21 @@ const formattedMessages = computed(() => {
     }))
 })
 
-function handleAvatarError(event: Event) {
+const getReactiveAvatar = computed(() => {
+  // 依赖 avatarUpdateTrigger，当头像缓存更新时会重新计算
+  avatarUpdateTrigger.value;
+  
+  return (userId: number) => {
+    const avatarUrl = getAvatar(userId);
+    // console.log(`响应式获取用户 ${userId} 头像:`, avatarUrl);
+    return avatarUrl;
+  };
+});
+
+function handleAvatarError(event: Event, userId: number) {
     const img = event.target as HTMLImageElement;
-    img.src = getAvatar(0); // 使用默认头像的用户ID
+    console.warn(`用户 ${userId} 的头像加载失败，使用默认头像`);
+    img.src = getAvatar(0); // 使用默认头像
 }
 
 function retryMessage(message: Comment | Explanation) {
