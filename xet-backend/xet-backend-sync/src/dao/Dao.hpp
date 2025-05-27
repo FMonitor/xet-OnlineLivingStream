@@ -18,9 +18,6 @@ public:
   {
     auto DBSession = cli.getSession();
 
-    // Get a list of all available schemas
-    std::list<mysqlx::Schema> schemaList = DBSession.getSchemas();
-
     DBSession.sql("USE xet_living_table").execute();
 
     auto result_db = DBSession.sql("SELECT user_id,username,avatar_url FROM users WHERE user_id = ?").bind((int64_t)id).execute();
@@ -218,6 +215,7 @@ public:
 
     return result_dto;
   }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
