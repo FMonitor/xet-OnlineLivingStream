@@ -16,9 +16,10 @@ echo "当前工作目录：$(pwd)"
 
 # PROJECT_DIR="/home/monitor"
 
-echo "1. 拉取/更新 GitHub dev 分支代码..."
+echo "1. 拉取/更新 GitHub dev 分支代码并切换到开发分支..."
 cd "$PROJECT_DIR"
     # git clone -b dev https://github.com/Aldebaran638/xet-OnlineLivingStream.git "$PROJECT_DIR"
+    git switch dev2 && git pull origin dev2
 
 
 echo "-------------------------------------"
