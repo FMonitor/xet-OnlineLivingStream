@@ -78,8 +78,7 @@ public:
 
       // 查询直播详细信息
       auto result_live = DBSession.sql(
-                                      "SELECT living_stream_id, creator_user_id, description, living_cover_url, living_title"
-                                      "FROM living_stream WHERE living_stream_id = ?")
+                                      "SELECT living_stream_id, creator_user_id, description, living_cover_url, living_title FROM living_stream WHERE living_stream_id = ?")
                              .bind(living_stream_id)
                              .execute();
 
