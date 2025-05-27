@@ -216,7 +216,7 @@ public:
     return result_dto;
   }
 
-  oatpp::Object<RLiveDto> getLivePlaybackById(const oatpp::Int64 &id)
+  oatpp::Object<RLivePlaybackDto> getLivePlaybackById(const oatpp::Int64 &id)
   {
     auto DBSession = cli.getSession();
 
