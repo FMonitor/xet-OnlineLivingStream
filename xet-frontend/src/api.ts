@@ -74,70 +74,70 @@ apiClient.interceptors.response.use(
     }
 )
 
-// API 响应通用接口
 export interface ApiResponse<T> {
-    statuscode: number;
-    msg: string;
+    statusCode: number;
+    message: string;     // 改为 message，与实际响应一致
     data: T[];
 }
 
-// 直播信息接口
+// 修改直播信息接口 - 适配实际响应格式
 export interface LiveStreamInfo {
     living_stream_id: number;
     creator_user_id: number;
-    living_stream_title: string;           
-    living_stream_cover_url: string;       
-    isliving: number;                      
-    living_stream_url: string;             
-    living_comment_room_url: string;       
-    living_expla_room_url: string;         
-    living_broadcast_room_url: string;     
-    live_explanation: Explanation[];       
-    live_comment: Comment[];               
-    live_file: File[];                     
-    playback_url?: string; // 可选的回放链接
+    description: string;                   // 实际响应中的字段
+    living_stream_url: string;
+    living_comment_room_url: string;
+    living_expla_room_url: string;
+    living_broadcast_room_url: string;
+    page_count_comment: number;
+    page_count_explanation: number;
+    page_count_file: number;
+    comments: Comment[];                   // 实际响应中使用这个字段名
+    explanations: Explanation[];           // 实际响应中使用这个字段名
+    files: File[];                         // 实际响应中使用这个字段名
 }
 
-
-// 评论接口
+// 修改评论接口 - 适配实际响应格式
 export interface Comment {
     comment_id: number;
-    user_id: number;                      
-    content: string;
+    living_stream_id: number;
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
+    content: string;
     sending?: boolean;
     error?: boolean;
-    living_stream_id?: number;
-    creator_user_id?: number;
+    // 兼容字段
+    user_id?: number;
 }
 
-// 讲解接口
+// 修改讲解接口 - 适配实际响应格式
 export interface Explanation {
-    explanation_id: number;                
-    user_id: number;                       
-    content: string;
+    expla_id: number;                      // 实际响应中使用这个字段名
+    living_stream_id: number;
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
+    content: string;
     sending?: boolean;
     error?: boolean;
-    
-    living_stream_id?: number;
-    creator_user_id?: number;
-    expla_id?: number;
+    // 兼容字段
+    explanation_id?: number;
+    user_id?: number;
 }
 
-// 文件接口
+// 修改文件接口 - 适配实际响应格式
 export interface File {
     file_id: number;
-    user_id: number;                       
-    file_url: string;
+    living_stream_id: number;
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
+    file_url: string;
     file_size?: number;
     sending?: boolean;
     error?: boolean;
-    
-    living_stream_id?: number;
-    creator_user_id?: number;
+    // 兼容字段
+    user_id?: number;
 }
+
 
 // 用户信息接口
 export interface User {
@@ -155,8 +155,8 @@ export const liveAPI = {
             console.log('获取到直播信息:', response.data);
             
             // 验证响应格式
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '获取直播信息失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '获取直播信息失败');
             }
             
             return response.data;
@@ -172,8 +172,8 @@ export const liveAPI = {
             const response = await apiClient.get(`/home/live/${liveId}/comment/${page}`);
             
             // 验证响应格式
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '获取评论失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '获取评论失败');
             }
             
             return response.data;
@@ -188,8 +188,8 @@ export const liveAPI = {
         try {
             const response = await apiClient.get(`/home/live/${liveId}/expla/${page}`);
             
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '获取讲解失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '获取讲解失败');
             }
             
             return response.data;
@@ -204,8 +204,8 @@ export const liveAPI = {
         try {
             const response = await apiClient.get(`/home/live/${liveId}/file/${page}`);
             
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '获取文件失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '获取文件失败');
             }
             
             return response.data;
@@ -226,8 +226,8 @@ export const liveAPI = {
             };
             const response = await apiClient.post(`/home/live/${liveId}/comment`, data);
             
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '添加评论失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '添加评论失败');
             }
             
             return response.data;
@@ -248,8 +248,8 @@ export const liveAPI = {
             };
             const response = await apiClient.post(`/home/live/${liveId}/expla`, data);
             
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '添加讲解失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '添加讲解失败');
             }
             
             return response.data;
@@ -270,8 +270,8 @@ export const liveAPI = {
             };
             const response = await apiClient.post(`/home/live/${liveId}/file`, data);
             
-            if (response.data.statuscode !== 200) {
-                throw new Error(response.data.msg || '添加文件失败');
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '添加文件失败');
             }
             
             return response.data;

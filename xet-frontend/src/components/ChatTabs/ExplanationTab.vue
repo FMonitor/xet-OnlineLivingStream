@@ -19,12 +19,12 @@
         <div v-for="expla in formattedExplanations" :key="expla.id"
             :class="['explanation-item', expla.isSelf ? 'self' : 'other']">
             <div v-if="!expla.isSelf" class="message-left">
-                <img class="avatar" :src="getAvatar(expla.creator_user_id)" @error="handleAvatarError($event)"
-                    alt="avatar" />
+                <img class="avatar" :src="getReactiveAvatar(expla.creator_user_id ?? 0)"
+                    @error="handleAvatarError($event, expla.creator_user_id ?? 0)" alt="avatar" />
                 <div class="message-content">
                     <div class="meta">
                         <span class="name">{{ expla.creator_user_id === 0 ? '匿名用户' : '用户' + expla.creator_user_id + ' '
-                        }}</span>
+                            }}</span>
                         <span class="time">{{ formatTime(expla.created_at) }}</span>
                     </div>
                     <div class="bubble">{{ expla.content }}</div>
@@ -47,8 +47,8 @@
                         </div>
                     </div>
                 </div>
-                <img class="avatar" :src="getAvatar(expla.creator_user_id)" @error="handleAvatarError($event)"
-                    alt="avatar" />
+                <img class="avatar" :src="getReactiveAvatar(expla.creator_user_id ?? 0)"
+                    @error="handleAvatarError($event, expla.creator_user_id ?? 0)" alt="avatar" />
             </div>
         </div>
 
@@ -60,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { getAvatar } from '../../avatarCache';
+import { getAvatar, avatarUpdateTrigger } from '../../avatarCache';
 import { defineProps, defineEmits, ref, computed, watch, nextTick, onMounted } from 'vue'
 import type { Explanation } from '../../api'
 
@@ -89,9 +89,20 @@ const systemNotification = '系统提示：直播内容及互动评论严禁传�
 const currentUserName = "我"
 const lastScrollHeight = ref(0)
 
-function handleAvatarError(event: Event) {
+const getReactiveAvatar = computed(() => {
+    avatarUpdateTrigger.value;
+
+    return (userId: number) => {
+        const avatarUrl = getAvatar(userId);
+        // console.log(`响应式获取用户 ${userId} 头像:`, avatarUrl);
+        return avatarUrl;
+    };
+});
+
+function handleAvatarError(event: Event, userId: number) {
     const img = event.target as HTMLImageElement;
-    img.src = getAvatar(0); // 使用默认头像的用户ID
+    console.warn(`用户 ${userId} 的头像加载失败，使用默认头像`);
+    img.src = getAvatar(0);
 }
 
 function retryMessage(message: Comment | Explanation) {
@@ -123,7 +134,7 @@ watch(() => props.messages.length, (newCount, oldCount) => {
             if (containerRef.value) {
                 const newContentHeight = containerRef.value.scrollHeight;
                 const heightDiff = newContentHeight - lastScrollHeight.value;
-                
+
                 containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0;
                 lastScrollHeight.value = 0;
             }
@@ -264,7 +275,7 @@ function formatTime(timestamp: string): string {
 .self-bubble {
     background-color: #9cc5e7;
     align-self: flex-end;
-    
+
 }
 
 .bubble.sending {
