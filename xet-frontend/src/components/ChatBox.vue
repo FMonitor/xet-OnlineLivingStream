@@ -1,6 +1,18 @@
 <template>
   <div class="chat-box">
 
+    <!-- 在顶部添加WebSocket连接状态指示器 -->
+    <div class="connection-status">
+      <div class="status-item" :class="{ 'connected': liveStore.isWsConnected.comment }">
+        <span class="status-dot"></span>
+        <span class="status-text">讨论: {{ liveStore.wsConnectionStatus.comment }}</span>
+      </div>
+      <div class="status-item" :class="{ 'connected': liveStore.isWsConnected.explanation }">
+        <span class="status-dot"></span>
+        <span class="status-text">讲解: {{ liveStore.wsConnectionStatus.explanation }}</span>
+      </div>
+    </div>
+    
     <!-- 顶部切换按钮 -->
     <div class="chat-tabs">
       <button v-for="tab in tabs" :key="tab" :class="{ active: currentTab === tab }" @click="currentTab = tab">
@@ -14,7 +26,7 @@
         :is="currentTabComponent" 
         :messages="currentMessages" 
         :files="currentFiles"
-        :currentUserId="currentUserId" 
+        :currentUserId="liveStore.currentUserId ?? 0" 
         :isLoading="isCurrentTabLoading"
         :hasMoreData="hasMoreCurrentTabData"
         @load-more="handleLoadMore"
@@ -69,10 +81,6 @@ import { useRoute } from 'vue-router'
 const liveStore = useLiveStore()
 const route = useRoute()
 const props = defineProps({
-  currentUserId: {
-    type: Number,
-    required: true
-  },
   comments: {
     type: Array,
     default: () => []
@@ -207,7 +215,7 @@ async function sendMessage() {
       // 创建本地消息对象
       localMessage = {
         comment_id: Date.now(),
-        creator_user_id: props.currentUserId,
+        creator_user_id: liveStore.currentUserId,
         content,
         created_at: new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
         living_stream_id: liveStore.currentLiveId ?? 0,
@@ -219,7 +227,7 @@ async function sendMessage() {
       
       try {
         // 发送到服务器
-        const success = await liveStore.addComment(content, props.currentUserId);
+        const success = await liveStore.sendComment(content);
         
         // 成功更新状态
         updateMessageStatus(localMessage, false, !success);
@@ -238,7 +246,7 @@ async function sendMessage() {
       // ...类似的代码...
       localMessage = {
         expla_id: Date.now(),
-        creator_user_id: props.currentUserId,
+        creator_user_id: liveStore.currentUserId,
         content,
         created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
         living_stream_id: liveStore.currentLiveId ?? 0,
@@ -249,7 +257,7 @@ async function sendMessage() {
       liveStore.explanations.push(localMessage)
       
       try {
-        const success = await liveStore.addExplanation(content, props.currentUserId);
+        const success = await liveStore.sendExplanation(content);
         updateMessageStatus(localMessage, false, !success);
         
         if (!success) {
@@ -304,10 +312,10 @@ async function retryMessage(message: Comment | Explanation) {
     
     if (isComment) {
       // 重试评论
-      sendPromise = liveStore.addComment(messageContent, props.currentUserId);
+      sendPromise = liveStore.sendComment(messageContent);
     } else {
       // 重试讲解
-      sendPromise = liveStore.addExplanation(messageContent, props.currentUserId);
+      sendPromise = liveStore.sendExplanation(messageContent);
     }
     
     // 与超时竞争
@@ -466,6 +474,7 @@ const stopDrag = () => {
 // 确保组件卸载时清理事件监听器
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+
   // 获取直播ID并加载数据
   const liveId = route.params.liveId as string
   if (liveId && (!liveStore.currentLiveId || liveStore.currentLiveId.toString() !== liveId)) {
@@ -473,9 +482,30 @@ onMounted(() => {
     liveStore.loadLiveInfo(liveId)
       .then(() => {
         console.log('直播信息加载成功')
+        
+        // 连接到WebSocket聊天室
+        return liveStore.connectToChat(liveId, liveStore.currentUserId ?? 0) 
+      })
+      .then((connected) => {
+        if (connected) {
+          console.log('WebSocket聊天室连接成功')
+        } else {
+          console.log('WebSocket连接失败，将使用HTTP模式')
+        }
       })
       .catch(error => {
         console.error('加载直播信息失败:', error)
+      })
+  } else if (liveId) {
+    // 如果直播信息已存在，尝试连接WebSocket
+    liveStore.connectToChat(liveId, liveStore.currentUserId ?? 0)
+      .then((connected) => {
+        if (connected) {
+          console.log('WebSocket聊天室连接成功')
+        }
+      })
+      .catch(error => {
+        console.error('连接聊天室失败:', error)
       })
   }
 })
@@ -485,14 +515,12 @@ onUnmounted(() => {
   document.removeEventListener('mousemove', onDrag)
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('click', handleClickOutside)
+
+  liveStore.disconnectFromChat()
 })
 </script>
 
 <style scoped>
-.chat {
-  background-color: #2b2f38;
-  width: 360px;
-}
 
 .chat-box {
   padding: 0px;
@@ -717,5 +745,50 @@ onUnmounted(() => {
   /* 灰色背景 */
   cursor: not-allowed;
   /* 禁用状态的光标 */
+}
+
+
+/* 添加连接状态指示器样式 */
+.connection-status {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 8px;
+  font-size: 11px;
+  background-color: #1a1a1f;
+  border-bottom: 1px solid #333;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 4px;
+  background-color: #ff4444;
+  transition: background-color 0.3s ease;
+}
+
+.status-item.connected .status-dot {
+  background-color: #44ff44;
+}
+
+.status-text {
+  color: #888;
+  font-size: 10px;
+}
+
+.status-item.connected .status-text {
+  color: #aaa;
+}
+
+/* 在移动端隐藏连接状态 */
+@media (max-width: 768px) {
+  .connection-status {
+    display: none;
+  }
 }
 </style>

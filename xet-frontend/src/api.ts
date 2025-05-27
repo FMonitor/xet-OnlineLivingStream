@@ -76,8 +76,8 @@ apiClient.interceptors.response.use(
 
 // API 响应通用接口
 export interface ApiResponse<T> {
-    statusCode: number;
-    message: string;
+    statuscode: number;
+    msg: string;
     data: T[];
 }
 
@@ -85,48 +85,58 @@ export interface ApiResponse<T> {
 export interface LiveStreamInfo {
     living_stream_id: number;
     creator_user_id: number;
-    description: string;
-    playback_url: string;
-    page_count_comment: number;
-    page_count_explanation: number;
-    page_count_file: number;
-    comments: Comment[];
-    explanations: Explanation[];
-    files: File[];
+    living_stream_title: string;           
+    living_stream_cover_url: string;       
+    isliving: number;                      
+    living_stream_url: string;             
+    living_comment_room_url: string;       
+    living_expla_room_url: string;         
+    living_broadcast_room_url: string;     
+    live_explanation: Explanation[];       
+    live_comment: Comment[];               
+    live_file: File[];                     
+    playback_url?: string; // 可选的回放链接
 }
+
 
 // 评论接口
 export interface Comment {
     comment_id: number;
-    living_stream_id: number;
-    creator_user_id: number;
-    created_at: string;
+    user_id: number;                      
     content: string;
-    sending?: boolean; // 可选属性，表示评论是否正在发送
-    error?: boolean; // 可选属性，表示评论发送是否失败
+    created_at: string;
+    sending?: boolean;
+    error?: boolean;
+    living_stream_id?: number;
+    creator_user_id?: number;
 }
 
 // 讲解接口
 export interface Explanation {
-    expla_id: number;
-    living_stream_id: number;
-    creator_user_id: number;
-    created_at: string;
+    explanation_id: number;                
+    user_id: number;                       
     content: string;
+    created_at: string;
     sending?: boolean;
     error?: boolean;
+    
+    living_stream_id?: number;
+    creator_user_id?: number;
+    expla_id?: number;
 }
 
 // 文件接口
 export interface File {
     file_id: number;
-    living_stream_id: number;
-    creator_user_id: number;
-    created_at: string;
+    user_id: number;                       
     file_url: string;
-    file_size?: number; // 可选属性，文件大小
-    sending?: boolean; 
+    created_at: string;
+    file_size?: number;
+    sending?: boolean;
     error?: boolean;
+    
+    living_stream_id?: number;
+    creator_user_id?: number;
 }
 
 // 用户信息接口
@@ -138,11 +148,17 @@ export interface User {
 
 // API 方法
 export const liveAPI = {
-    // 获取直播信息（包含评论、讲解、文件）
+    // 获取直播信息
     fetchLiveInfo: async (liveId: number | string): Promise<ApiResponse<LiveStreamInfo>> => {
         try {
             const response = await apiClient.get(`/home/live/${liveId}`);
             console.log('获取到直播信息:', response.data);
+            
+            // 验证响应格式
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '获取直播信息失败');
+            }
+            
             return response.data;
         } catch (error) {
             console.error('获取直播信息失败:', error);
@@ -150,10 +166,16 @@ export const liveAPI = {
         }
     },
 
-    // 分页获取评论
+    // 分页获取评论 - 更新响应处理
     fetchCommentsByPage: async (liveId: number | string, page: number): Promise<ApiResponse<Comment>> => {
         try {
             const response = await apiClient.get(`/home/live/${liveId}/comment/${page}`);
+            
+            // 验证响应格式
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '获取评论失败');
+            }
+            
             return response.data;
         } catch (error) {
             console.error('获取评论失败:', error);
@@ -161,10 +183,15 @@ export const liveAPI = {
         }
     },
 
-    // 分页获取讲解
+    // 分页获取讲解 - 更新响应处理
     fetchExplanationsByPage: async (liveId: number | string, page: number): Promise<ApiResponse<Explanation>> => {
         try {
             const response = await apiClient.get(`/home/live/${liveId}/expla/${page}`);
+            
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '获取讲解失败');
+            }
+            
             return response.data;
         } catch (error) {
             console.error('获取讲解失败:', error);
@@ -172,10 +199,15 @@ export const liveAPI = {
         }
     },
 
-    // 分页获取文件
+    // 分页获取文件 - 更新响应处理
     fetchFilesByPage: async (liveId: number | string, page: number): Promise<ApiResponse<File>> => {
         try {
             const response = await apiClient.get(`/home/live/${liveId}/file/${page}`);
+            
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '获取文件失败');
+            }
+            
             return response.data;
         } catch (error) {
             console.error('获取文件失败:', error);
@@ -183,7 +215,7 @@ export const liveAPI = {
         }
     },
 
-    // 添加评论
+    // 添加评论 - 更新响应处理
     addComment: async (liveId: number | string, content: string, userId: number): Promise<ApiResponse<any>> => {
         try {
             const data = {
@@ -193,14 +225,19 @@ export const liveAPI = {
                 created_at: new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
             };
             const response = await apiClient.post(`/home/live/${liveId}/comment`, data);
+            
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '添加评论失败');
+            }
+            
             return response.data;
         } catch (error) {
-            console.error('获取评论失败:', error);
+            console.error('添加评论失败:', error);
             throw error;
         }
     },
 
-    // 添加讲解
+    // 添加讲解 - 更新响应处理
     addExplanation: async (liveId: number | string, content: string, userId: number): Promise<ApiResponse<any>> => {
         try {
             const data = {
@@ -210,14 +247,19 @@ export const liveAPI = {
                 created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
             };
             const response = await apiClient.post(`/home/live/${liveId}/expla`, data);
+            
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '添加讲解失败');
+            }
+            
             return response.data;
         } catch (error) {
-            console.error('获取讲解失败:', error);
+            console.error('添加讲解失败:', error);
             throw error;
         }
     },
 
-    // 添加文件
+    // 添加文件 - 更新响应处理
     addFile: async (liveId: number | string, fileUrl: string, userId: number): Promise<ApiResponse<any>> => {
         try {
             const data = {
@@ -227,9 +269,14 @@ export const liveAPI = {
                 created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
             };
             const response = await apiClient.post(`/home/live/${liveId}/file`, data);
+            
+            if (response.data.statuscode !== 200) {
+                throw new Error(response.data.msg || '添加文件失败');
+            }
+            
             return response.data;
         } catch (error) {
-            console.error('获取文件失败:', error);
+            console.error('添加文件失败:', error);
             throw error;
         }
     }
