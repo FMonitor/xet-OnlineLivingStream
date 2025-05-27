@@ -74,6 +74,17 @@ class LiveFileDto : public oatpp::DTO
   DTO_FIELD(String, file_url);
 };
 
+class LivePlaybackDto : public oatpp::DTO
+{
+
+  DTO_INIT(LivePlaybackDto, DTO)
+
+  DTO_FIELD(Int64, playback_id);
+  DTO_FIELD(String, playback_title);
+  DTO_FIELD(String, created_at);
+  DTO_FIELD(String, playback_url);
+};
+
 class LiveDto : public oatpp::DTO
 {
 
@@ -83,6 +94,8 @@ class LiveDto : public oatpp::DTO
   DTO_FIELD(Int64, creator_user_id);
   DTO_FIELD(String, description);
   DTO_FIELD(String, living_stream_url);
+  DTO_FIELD(String, living_cover_url);
+  DTO_FIELD(String, living_title);
   DTO_FIELD(String, living_comment_room_url);
   DTO_FIELD(String, living_expla_room_url);
   DTO_FIELD(String, living_broadcast_room_url);
@@ -92,6 +105,7 @@ class LiveDto : public oatpp::DTO
   DTO_FIELD(oatpp::List<oatpp::Object<LiveCommentDto>>, comments);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveExplaDto>>, explanations);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveFileDto>>, files);
+  DTO_FIELD(oatpp::List<oatpp::Object<LivePlaybackDto>>, playbacks);
 };
 
 // 用于返回直播信息的Dto
@@ -130,6 +144,16 @@ class RLiveFileDto : public oatpp::DTO
   DTO_FIELD(Int64, statusCode);
   DTO_FIELD(String, message);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveFileDto>>, data);
+};
+
+// 用于返回首页直播信息的Dto
+class RHomeDto : public oatpp::DTO
+{
+  DTO_INIT(RHomeDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<LiveDto>>, data);
 };
 
 class UInt64Dto : public oatpp::DTO
