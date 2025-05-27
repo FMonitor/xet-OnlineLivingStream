@@ -19,6 +19,7 @@ echo "当前工作目录：$(pwd)"
 echo "1. 拉取/更新 GitHub dev 分支代码并切换到开发分支..."
 cd "$PROJECT_DIR"
     # git clone -b dev https://github.com/Aldebaran638/xet-OnlineLivingStream.git "$PROJECT_DIR"
+    pwd
     cd xet-OnlineLivingStream
     git switch dev2 && git pull origin dev2
 
