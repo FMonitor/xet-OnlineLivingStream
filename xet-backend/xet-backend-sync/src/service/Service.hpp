@@ -20,6 +20,7 @@ private:
 
 public:
   oatpp::Object<RUserDto> getUserById(const oatpp::Int64 &id);
+  oatpp::Object<RHomeDto> getHomeById(const oatpp::Int64 &id);
   oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id);
   oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, int64_t page);
   oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, int64_t page);

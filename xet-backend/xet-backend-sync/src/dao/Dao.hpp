@@ -47,6 +47,78 @@ public:
 
     return result_dto;
   }
+  // 第一个参数是用户id
+  oatpp::Object<RHomeDto> getHomeById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RHomeDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<LiveDto>>::createShared();
+
+    // 切换到目标数据库
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 查询该用户拥有的所有直播id
+    auto result_streams = DBSession.sql(
+                                       "SELECT living_stream_id FROM user_living_stream WHERE user_id = ?")
+                              .bind((int64_t)id)
+                              .execute();
+
+    // 如果没有直播
+    if (result_streams.count() == 0)
+    {
+      result_dto->statusCode = 404;
+      result_dto->message = "No living streams found for the user.";
+      return result_dto;
+    }
+
+    // 遍历每个直播
+    for (auto stream_row : result_streams)
+    {
+      int64_t living_stream_id = stream_row[0].get<int64_t>();
+
+      // 查询直播详细信息
+      auto result_live = DBSession.sql(
+                                      "SELECT living_stream_id, creator_user_id, description, living_cover_url, living_title"
+                                      "FROM living_stream WHERE living_stream_id = ?")
+                             .bind(living_stream_id)
+                             .execute();
+
+      if (result_live.count() == 0)
+        continue;
+
+      auto live_row = result_live.fetchOne();
+      auto livedto = LiveDto::createShared();
+      livedto->living_stream_id = live_row[0].get<int64_t>();
+      livedto->creator_user_id = live_row[1].get<int64_t>();
+      livedto->description = live_row[2].get<std::string>();
+      livedto->living_cover_url = live_row[3].get<std::string>();
+      livedto->living_title = live_row[4].get<std::string>();
+      // 查询该直播的所有回放
+      livedto->playbacks = oatpp::List<oatpp::Object<LivePlaybackDto>>::createShared();
+      auto result_playbacks = DBSession.sql(
+                                           "SELECT playback_id, playback_title, DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at, playback_url "
+                                           "FROM live_playback WHERE living_stream_id = ? ORDER BY created_at DESC")
+                                  .bind(living_stream_id)
+                                  .execute();
+
+      for (auto playback_row : result_playbacks)
+      {
+        auto playbackdto = LivePlaybackDto::createShared();
+        playbackdto->playback_id = playback_row[0].get<int64_t>();
+        playbackdto->playback_title = playback_row[1].get<std::string>();
+        playbackdto->created_at = playback_row[2].get<std::string>();
+        playbackdto->playback_url = playback_row[3].get<std::string>();
+        livedto->playbacks->push_back(playbackdto);
+      }
+
+      result_dto->data->push_back(livedto);
+    }
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Find home info ok";
+    return result_dto;
+  }
+
   // 第一个参数是直播id,第二个参数是初始化的时候评论,讲解等的最大数目
   oatpp::Object<RLiveDto> getLiveById(const oatpp::Int64 &id, const int64_t pagesize)
   {

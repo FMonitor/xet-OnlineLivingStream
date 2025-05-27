@@ -52,133 +52,32 @@ public:
   {
     return createDtoResponse(Status::CODE_200, service.getUserById(id));
   };
-  // ADD_CORS(UserGET,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("GET", "/user/{id}", UserGET)
-  // {
-  //   ENDPOINT_ASYNC_INIT(UserGET)
+  ADD_CORS(HomeGET)
+  ENDPOINT("GET", "/home/{id}", HomeGET, PATH(Int64, id))
+  {
+    return createDtoResponse(Status::CODE_200, service.getHomeById(id));
+  };
 
-  //   // 从请求中解析 id
-  //   v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
-
-  //   // Coroutine 的核心逻辑入口
-  //   Action act() override
-  //   {
-  //     Service service;
-  //     auto dto = service.getUserById(id);
-  //     // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
-  //     return _return(controller->createDtoResponse(Status::CODE_200, dto));
-  //   }
-  // };
   ADD_CORS(LiveGET)
   ENDPOINT("GET", "/home/live/{id}", LiveGET, PATH(Int64, id))
   {
     return createDtoResponse(Status::CODE_200, service.getLiveById(id));
   };
-  // ADD_CORS(LiveGET,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("GET", "/home/live/{id}", LiveGET)
-  // {
-  //   ENDPOINT_ASYNC_INIT(LiveGET)
-
-  //   // 从请求中解析 id
-  //   v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
-
-  //   // Coroutine 的核心逻辑入口
-  //   Action act() override
-  //   {
-  //     Service service;
-  //     auto dto = service.getLiveById(id);
-  //     // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
-  //     return _return(controller->createDtoResponse(Status::CODE_200, dto));
-  //   }
-  // };
   ADD_CORS(LiveCommentGET)
   ENDPOINT("GET", "/home/live/{id}/comment/{page}", LiveCommentGET, PATH(Int64, id), PATH(Int64, page))
   {
     return createDtoResponse(Status::CODE_200, service.getLiveComment(id,page));
   };
-  // ADD_CORS(LiveCommentGET);
-  // ENDPOINT_ASYNC("GET", "/home/live/{id}/comment/{page}", LiveCommentGET)
-  // {
-  //   ENDPOINT_ASYNC_INIT(LiveCommentGET)
-
-  //   // 从请求中解析 id
-  //   v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
-  //   // 从请求中解析 id
-  //   v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
-
-  //   // Coroutine 的核心逻辑入口
-  //   Action act() override
-  //   {
-  //     Service service;
-  //     auto dto = service.getLiveComment(id, page);
-  //     // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
-  //     return _return(controller->createDtoResponse(Status::CODE_200, dto));
-  //   }
-  // };
   ADD_CORS(LiveExplaGET)
   ENDPOINT("GET", "/home/live/{id}/expla/{page}", LiveExplaGET, PATH(Int64, id), PATH(Int64, page))
   {
     return createDtoResponse(Status::CODE_200, service.getLiveExpla(id, page));
   };
-  // ADD_CORS(LiveExplaGET,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("GET", "/home/live/{id}/expla/{page}", LiveExplaGET)
-  // {
-  //   ENDPOINT_ASYNC_INIT(LiveExplaGET)
-
-  //   // 从请求中解析 id
-  //   v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
-  //   // 从请求中解析 id
-  //   v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
-
-  //   // Coroutine 的核心逻辑入口
-  //   Action act() override
-  //   {
-  //     Service service;
-  //     auto dto = service.getLiveExpla(id, page);
-  //     // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
-  //     return _return(controller->createDtoResponse(Status::CODE_200, dto));
-  //   }
-  // };
   ADD_CORS(LiveFileGET)
   ENDPOINT("GET", "/home/live/{id}/file/{page}", LiveFileGET, PATH(Int64, id), PATH(Int64, page))
   {
     return createDtoResponse(Status::CODE_200, service.getLiveFile(id,page));
   };
-  // ADD_CORS(LiveFileGET,
-  //          "*",
-  //          "GET,POST,PUT,DELETE,OPTIONS",
-  //          "Content-Type, Authorization",
-  //          "3600");
-  // ENDPOINT_ASYNC("GET", "/home/live/{id}/file/{page}", LiveFileGET)
-  // {
-  //   ENDPOINT_ASYNC_INIT(LiveFileGET)
-
-  //   // 从请求中解析 id
-  //   v_int64 id = std::strtoll(request->getPathVariable("id")->c_str(), nullptr, 10);
-  //   // 从请求中解析 page
-  //   v_int64 page = std::strtoll(request->getPathVariable("page")->c_str(), nullptr, 10);
-
-  //   // Coroutine 的核心逻辑入口
-  //   Action act() override
-  //   {
-  //     Service service;
-  //     auto dto = service.getLiveFile(id, page);
-  //     // _return 调用会生成一个 TYPE_FINISH 的 Action 并发送响应
-  //     return _return(controller->createDtoResponse(Status::CODE_200, dto));
-  //   }
-  // };
 
   ADD_CORS(LiveCommentPOST)
   ENDPOINT("POST", "/home/live/{id}/comment", LiveCommentPOST, PATH(Int64, id), BODY_DTO(Object<LiveCommentDto>, rDto))
@@ -198,46 +97,6 @@ public:
     rDto->living_stream_id = id;
     return createDtoResponse(Status::CODE_200, service.instertLiveFile(rDto));
   };
-
-//   ADD_CORS(LiveExplaPOST,
-//            "*",
-//            "GET,POST,PUT,DELETE,OPTIONS",
-//            "Content-Type, Authorization",
-//            "3600");
-//   ENDPOINT_ASYNC("POST", "/home/live/{id}/expla", LiveExplaPOST){
-//       ENDPOINT_ASYNC_INIT(LiveExplaPOST)
-
-//           Action act() override{
-//               return request->readBodyToDtoAsync<oatpp::Object<LiveExplaDto>>(controller->getDefaultObjectMapper()).callbackTo(&LiveExplaPOST::returnResponse);
-// }
-
-// Action
-// returnResponse(const oatpp::Object<LiveExplaDto> &rDto)
-// {
-//   Service service;
-//   return _return(controller->createDtoResponse(Status::CODE_200, service.instertLiveExpla(rDto)));
-// }
-// }
-// ;
-
-// ADD_CORS(LiveFilePOST,
-//          "*",
-//          "GET,POST,PUT,DELETE,OPTIONS",
-//          "Content-Type, Authorization",
-//          "3600");
-// ENDPOINT_ASYNC("POST", "/home/live/{id}/file", LiveFilePOST){
-//     ENDPOINT_ASYNC_INIT(LiveFilePOST)
-
-//         Action act() override{
-//             return request->readBodyToDtoAsync<oatpp::Object<LiveFileDto>>(controller->getDefaultObjectMapper()).callbackTo(&LiveFilePOST::returnResponse);
-// }
-
-// Action returnResponse(const oatpp::Object<LiveFileDto> &rDto)
-// {
-//   Service service;
-//   return _return(controller->createDtoResponse(Status::CODE_200, service.instertLiveFile(rDto)));
-// }
-// }
 ;
 
 /**

@@ -17,6 +17,8 @@ CREATE TABLE living_stream (
     creator_user_id INT NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     description TEXT,
+    living_title VARCHAR(255) NOT NULL,
+    living_cover_url VARCHAR(255) DEFAULT NULL,
     isliving BOOLEAN DEFAULT FALSE,
     living_stream_url VARCHAR(255) DEFAULT NULL,
     living_comment_room_url VARCHAR(255) DEFAULT NULL,
@@ -74,6 +76,16 @@ CREATE TABLE live_file (
     FOREIGN KEY (creator_user_id) REFERENCES users(user_id)
 );
 
+CREATE TABLE live_playback (
+    playback_id INT AUTO_INCREMENT PRIMARY KEY,
+    living_stream_id INT NOT NULL,
+    playback_title VARCHAR(255) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    playback_url VARCHAR(255) NOT NULL,
+    FOREIGN KEY (living_stream_id) REFERENCES living_stream(living_stream_id)
+);
+
+
 -- 修改所有表的字符集
 ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4;
 ALTER TABLE living_stream CONVERT TO CHARACTER SET utf8mb4;
@@ -89,9 +101,9 @@ INSERT INTO users (username, password, email, avatar_url) VALUES
 ('user3', 'password789', 'user3@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
-INSERT INTO living_stream (creator_user_id, description) VALUES 
-(1, '这是第一个直播间的介绍'),
-(2, '这是第二个直播间的介绍');
+INSERT INTO living_stream (creator_user_id, description, living_title, living_cover_url,living_stream_url) VALUES 
+(1, '这是第一个直播间的介绍', 'Title1','http://lcmonitor.dynv6.net/file/cover_example.svg','0'),
+(2, '这是第二个直播间的介绍', 'Title2','http://lcmonitor.dynv6.net/file/cover_example.svg','0');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 
@@ -149,3 +161,7 @@ INSERT INTO live_explanation (living_stream_id, creator_user_id, content) VALUES
 (1, 3, 'explanation8'),
 (1, 1, 'explanation9'),
 (1, 2, 'explanation10');
+
+INSERT INTO live_playback (living_stream_id, playback_title, playback_url) VALUES
+(1, '直播1的回放1', 'https://lcmonitor.dynv6.net/file/playback1.m3u8'),
+(2, '直播2的回放1', 'https://lcmonitor.dynv6.net/file/playback2.m3u8');
