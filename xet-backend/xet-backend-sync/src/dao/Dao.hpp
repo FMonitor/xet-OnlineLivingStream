@@ -133,7 +133,7 @@ public:
     DBSession.sql("USE xet_living_table").execute();
 
     // 查询直播信息
-    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url FROM living_stream WHERE living_stream_id = ?")
+    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url,isliving FROM living_stream WHERE living_stream_id = ?")
                               .bind((int64_t)id)
                               .execute();
 
@@ -156,6 +156,8 @@ public:
     livedto->living_comment_room_url = live_row[4].get<std::string>();
     livedto->living_expla_room_url = live_row[5].get<std::string>();
     livedto->living_broadcast_room_url = live_row[6].get<std::string>();
+    livedto->isliving = live_row[7].get<bool>();
+
     // 查询评论总数并分页
     auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
@@ -491,6 +493,8 @@ public:
 
     return result_dto;
   }
+
+
 };
 
 #endif // Dao_HPP

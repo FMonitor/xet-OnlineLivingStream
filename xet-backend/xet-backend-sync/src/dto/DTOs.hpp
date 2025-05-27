@@ -10,16 +10,17 @@
  *  Data Transfer Object. Object containing fields only.
  *  Used in API for serialization/deserialization and validation
  */
-class MessageDto : public oatpp::DTO {
+class MessageDto : public oatpp::DTO
+{
 
   DTO_INIT(MessageDto, DTO)
 
   DTO_FIELD(Int64, statusCode);
   DTO_FIELD(String, message);
-
 };
 
-class UserDto : public oatpp::DTO {
+class UserDto : public oatpp::DTO
+{
 
   DTO_INIT(UserDto, DTO)
 
@@ -28,15 +29,15 @@ class UserDto : public oatpp::DTO {
   DTO_FIELD(String, avatar_url);
 };
 
-//用于返回用户信息(不包括隐私信息)的Dto
-class RUserDto : public oatpp::DTO {
+// 用于返回用户信息(不包括隐私信息)的Dto
+class RUserDto : public oatpp::DTO
+{
 
   DTO_INIT(RUserDto, DTO)
 
   DTO_FIELD(Int64, statusCode);
   DTO_FIELD(String, message);
   DTO_FIELD(oatpp::List<oatpp::Object<UserDto>>, data);
-
 };
 
 class LiveCommentDto : public oatpp::DTO
@@ -92,6 +93,7 @@ class LiveDto : public oatpp::DTO
 
   DTO_FIELD(Int64, living_stream_id);
   DTO_FIELD(Int64, creator_user_id);
+  DTO_FIELD(Boolean, isliving);
   DTO_FIELD(String, description);
   DTO_FIELD(String, living_stream_url);
   DTO_FIELD(String, living_cover_url);
