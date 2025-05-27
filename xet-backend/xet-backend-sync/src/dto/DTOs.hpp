@@ -145,7 +145,15 @@ class RLiveFileDto : public oatpp::DTO
   DTO_FIELD(String, message);
   DTO_FIELD(oatpp::List<oatpp::Object<LiveFileDto>>, data);
 };
+// 用于返回直播中文件信息组的Dto
+class RLivePlaybackDto : public oatpp::DTO
+{
+  DTO_INIT(RLivePlaybackDto, DTO)
 
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<LivePlaybackDto>>, data);
+};
 // 用于返回首页直播信息的Dto
 class RHomeDto : public oatpp::DTO
 {

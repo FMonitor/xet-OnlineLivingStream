@@ -17,6 +17,11 @@ oatpp::Object<RLiveDto> Service::getLiveById(const oatpp::Int64 &id)
 {
   return dao.getLiveById(id, PAGESIZE);
 }
+oatpp::Object<RLivePlaybackDto> Service::getLivePlaybackById(const oatpp::Int64 &id)
+{
+  return dao.getLivePlaybackById(id);
+}
+
 oatpp::Object<RLiveCommentDto> Service::getLiveComment(const oatpp::Int64 &id, int64_t page)
 {
   return dao.getLiveComment(id, PAGESIZE, page);

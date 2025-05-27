@@ -57,7 +57,11 @@ public:
   {
     return createDtoResponse(Status::CODE_200, service.getHomeById(id));
   };
-
+  ADD_CORS(LivePlaybackGET)
+  ENDPOINT("GET", "/home/playback/{id}", LivePlaybackGET, PATH(Int64, id))
+  {
+    return createDtoResponse(Status::CODE_200, service.getLivePlaybackById(id));
+  };
   ADD_CORS(LiveGET)
   ENDPOINT("GET", "/home/live/{id}", LiveGET, PATH(Int64, id))
   {
@@ -66,7 +70,7 @@ public:
   ADD_CORS(LiveCommentGET)
   ENDPOINT("GET", "/home/live/{id}/comment/{page}", LiveCommentGET, PATH(Int64, id), PATH(Int64, page))
   {
-    return createDtoResponse(Status::CODE_200, service.getLiveComment(id,page));
+    return createDtoResponse(Status::CODE_200, service.getLiveComment(id, page));
   };
   ADD_CORS(LiveExplaGET)
   ENDPOINT("GET", "/home/live/{id}/expla/{page}", LiveExplaGET, PATH(Int64, id), PATH(Int64, page))
@@ -76,7 +80,7 @@ public:
   ADD_CORS(LiveFileGET)
   ENDPOINT("GET", "/home/live/{id}/file/{page}", LiveFileGET, PATH(Int64, id), PATH(Int64, page))
   {
-    return createDtoResponse(Status::CODE_200, service.getLiveFile(id,page));
+    return createDtoResponse(Status::CODE_200, service.getLiveFile(id, page));
   };
 
   ADD_CORS(LiveCommentPOST)
@@ -97,14 +101,13 @@ public:
     rDto->living_stream_id = id;
     return createDtoResponse(Status::CODE_200, service.instertLiveFile(rDto));
   };
-;
+  ;
 
-/**
- * Codegen 结束
- * 是否是固定模板:是
- */
-}
-;
+  /**
+   * Codegen 结束
+   * 是否是固定模板:是
+   */
+};
 #include OATPP_CODEGEN_END(ApiController)
 
 #endif /* UserController_hpp */

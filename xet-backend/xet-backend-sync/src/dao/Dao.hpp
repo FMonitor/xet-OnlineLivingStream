@@ -216,6 +216,38 @@ public:
     return result_dto;
   }
 
+  oatpp::Object<RLiveDto> getLivePlaybackById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+
+    DBSession.sql("USE xet_living_table").execute();
+
+    auto result_db = DBSession.sql("SELECT playback_id,playback_title,DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:%s') AS created_at,playback_url FROM live_playback WHERE playback_id = ?").bind((int64_t)id).execute();
+
+    if (result_db.count() == 0)
+    {
+      std::cerr << "No playback found with id: " << id << std::endl;
+      return nullptr;
+    }
+
+    auto row = result_db.fetchOne();
+    auto result_dto = RLivePlaybackDto::createShared();
+    // 在oatpp中,所有的元素都需要初始化,否则分分钟段错误
+    result_dto->data = oatpp::List<oatpp::Object<LivePlaybackDto>>::createShared();
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Find playback ok";
+
+    auto playbackdto = LivePlaybackDto::createShared();
+    playbackdto->playback_id = row[0].get<int64_t>();
+    playbackdto->playback_title = row[1].get<std::string>();
+    playbackdto->created_at = row[2].get<std::string>();
+    playbackdto->playback_url = row[3].get<std::string>();
+    result_dto->data->push_back(playbackdto);
+
+    return result_dto;
+  }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveCommentDto> getLiveComment(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
