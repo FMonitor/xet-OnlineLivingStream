@@ -10,6 +10,7 @@ set -e  # 出错即退出
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 PROJECT_DIR="$( cd "$SCRIPT_DIR/.." &> /dev/null && pwd )"
 
+
 # 进入项目根目录
 cd "$PROJECT_DIR"
 echo "当前工作目录：$(pwd)"
