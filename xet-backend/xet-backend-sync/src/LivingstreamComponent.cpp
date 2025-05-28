@@ -11,6 +11,13 @@
 #include <errno.h>
 
 std::map<int, int> LivingstreamPid;
+// RTMP服务器监听地址,在OBS上就直接填这个就行了.最终的推流地址为RTMP_URL+推流码(就是直播间id)
+const std::string RTMP_URL = "rtmp://localhost:1935/live/";
+// 直播文件m3u8存储的地址
+const std::string FILE_URL = "http://localhost:8001/file/";
+
+// ffmpeg拉流后存储hls文件的地址.最终的文件地址为OUTPUT_URL+回放id
+const std::string OUTPUT_POS = "../../xet-backend-async/file/";
 
 // 函数1:根据直播间id,回放id,开启一个新的进程并使用ffmpeg监听一个推流链接(需要回放id),并将进程号记录在LivingstreamPid(需要直播间id)
 // 不返回信息,直接传StartLivingDto的引用然后修改
@@ -18,9 +25,9 @@ std::map<int, int> LivingstreamPid;
 void start_ffmpeg(int64_t living_id, int64_t playback_id)
 {
   // OBS推流地址
-  std::string obs_rtmp_url = "rtmp://localhost:1935/live/"+ std::to_string(living_id);
+  std::string obs_rtmp_url = RTMP_URL + std::to_string(living_id);
   // 构造输出路径
-  std::string hls_output_dir = "../../xet-backend-async/file/" + std::to_string(playback_id);
+  std::string hls_output_dir = OUTPUT_POS + std::to_string(playback_id);
   // HLS分段时长
   int hls_time = 2;
   // 回放ID字符串

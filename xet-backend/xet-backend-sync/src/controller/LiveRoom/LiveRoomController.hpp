@@ -77,7 +77,6 @@ public:
   {
     return createDtoResponse(Status::CODE_200, service.endLiving(id));
   };
-
   ADD_CORS(LiveCommentGET)
   ENDPOINT("GET", "/home/live/{id}/comment/{page}", LiveCommentGET, PATH(Int64, id), PATH(Int64, page))
   {

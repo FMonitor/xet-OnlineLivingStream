@@ -378,6 +378,7 @@ public:
     result_dto->message = "Comments retrieved successfully.";
     return result_dto;
   }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
@@ -433,6 +434,7 @@ public:
     result_dto->message = "Explanations retrieved successfully.";
     return result_dto;
   }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveFileDto> getLiveFile(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
@@ -617,9 +619,9 @@ public:
     int64_t playback_id = result.fetchOne()[0].get<int64_t>();
 
     // 构造living_stream_url, living_stream_code, living_url
-    std::string living_stream_url = "rtmp://localhost/live/obs_stream/";
-    std::string living_stream_code = std::to_string(playback_id);
-    std::string living_url = "http://localhost:8001/file/" + living_stream_code + "/playback" + living_stream_code + ".m3u8";
+    std::string living_stream_url = RTMP_URL;
+    std::string living_stream_code = std::to_string(id);
+    std::string living_url = FILE_URL + std::to_string(playback_id) + "/playback" + std::to_string(playback_id) + ".m3u8";
 
     // 更新living_stream表
     DBSession.sql("UPDATE living_stream SET living_stream_url = ?, living_stream_code = ?, living_url = ? WHERE living_stream_id = ?")
@@ -629,7 +631,7 @@ public:
         .bind((int64_t)id)
         .execute();
 
-    //更新回放的回放地址
+    // 更新回放的回放地址
     DBSession.sql("UPDATE live_playback SET playback_url = ? WHERE playback_id = ?")
         .bind(living_url)
         .bind(playback_id)
@@ -658,7 +660,7 @@ public:
     DBSession.sql("USE xet_living_table").execute();
 
     // 清空对应字段
-    DBSession.sql("UPDATE living_stream SET living_stream_url = '', living_stream_code = '', living_url = '' WHERE living_stream_id = ?")
+    DBSession.sql("UPDATE living_stream SET living_url = '' WHERE living_stream_id = ?")
         .bind((int64_t)id)
         .execute();
 
