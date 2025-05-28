@@ -168,6 +168,26 @@ class RHomeDto : public oatpp::DTO
   DTO_FIELD(oatpp::List<oatpp::Object<LiveDto>>, data);
 };
 
+class StartLivingDto : public oatpp::DTO
+{
+
+  DTO_INIT(StartLivingDto, DTO)
+  //新的回放的id
+  DTO_FIELD(Int64, playback_id);
+  DTO_FIELD(String, living_stream_url);
+  DTO_FIELD(String, living_stream_code);
+  DTO_FIELD(String, living_url);
+};
+
+class RStartLivingDto : public oatpp::DTO
+{
+  DTO_INIT(RStartLivingDto, DTO)
+
+  DTO_FIELD(Int64, statusCode);
+  DTO_FIELD(String, message);
+  DTO_FIELD(oatpp::List<oatpp::Object<StartLivingDto>>, data);
+};
+
 class UInt64Dto : public oatpp::DTO
 {
 

@@ -5,7 +5,7 @@
 #include <mysqlx/xdevapi.h>
 #include "oatpp/core/macro/codegen.hpp"
 #include <iostream>
-
+#include "../LivingstreamComponent.hpp"
 #include "../MySQLComponent.hpp"
 extern mysqlx::Client cli;
 
@@ -582,6 +582,88 @@ public:
       result_dto->message = std::string("Failed to insert file: ") + e.what();
     }
 
+    return result_dto;
+  }
+
+  oatpp::Object<RStartLivingDto> startLivingById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RStartLivingDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<StartLivingDto>>::createShared();
+
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 构造playback_title
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::tm tm_now;
+#if defined(_WIN32) || defined(_WIN64)
+    localtime_s(&tm_now, &now_time);
+#else
+    localtime_r(&now_time, &tm_now);
+#endif
+    char time_buf[32];
+    std::strftime(time_buf, sizeof(time_buf), "%Y%m%d%H%M%S", &tm_now);
+    std::string playback_title = "living" + std::to_string(id) + time_buf;
+
+    // 构造playback_url
+    std::string playback_url = "rtmp://localhost/live/obs_stream/" + std::to_string(id);
+
+    // 插入live_playback表
+    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title, playback_url) VALUES (?, ?, ?)")
+        .bind((int64_t)id)
+        .bind(playback_title)
+        .bind(playback_url)
+        .execute();
+
+    // 获取刚插入的playback_id
+    auto result = DBSession.sql("SELECT LAST_INSERT_ID()").execute();
+    int64_t playback_id = result.fetchOne()[0].get<int64_t>();
+
+    // 构造living_stream_url, living_stream_code, living_url
+    std::string living_stream_url = playback_url;
+    std::string living_stream_code = std::to_string(playback_id);
+    std::string living_url = "http://localhost:8001/file/" + living_stream_code + "/playback" + living_stream_code + ".m3u8";
+
+    // 更新living_stream表
+    DBSession.sql("UPDATE living_stream SET living_stream_url = ?, living_stream_code = ?, living_url = ? WHERE living_stream_id = ?")
+        .bind(living_stream_url)
+        .bind(living_stream_code)
+        .bind(living_url)
+        .bind((int64_t)id)
+        .execute();
+
+    start_ffmpeg(id, playback_id);
+
+    // 构造返回DTO
+    auto dto = StartLivingDto::createShared();
+    dto->playback_id = playback_id;
+    dto->living_stream_url = living_stream_url;
+    dto->living_stream_code = living_stream_code;
+    dto->living_url = living_url;
+    result_dto->data->push_back(dto);
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Start living success";
+    return result_dto;
+  }
+
+  oatpp::Object<MessageDto> endLivingById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = MessageDto::createShared();
+
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 清空对应字段
+    DBSession.sql("UPDATE living_stream SET living_stream_url = '', living_stream_code = '', living_url = '' WHERE living_stream_id = ?")
+        .bind((int64_t)id)
+        .execute();
+
+    end_ffmpeg(id);
+
+    result_dto->statusCode = 200;
+    result_dto->message = "End living success";
     return result_dto;
   }
 };

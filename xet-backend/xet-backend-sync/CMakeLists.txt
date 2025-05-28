@@ -24,6 +24,10 @@ add_library(${project_name}-lib
         src/service/Service.cpp
         src/dao/Dao.hpp
         src/dto/DTOs.hpp
+
+        # 直播流相关组件
+        src/LivingstreamComponent.cpp
+        src/LivingstreamComponent.hpp
 )
 
 ## 主库头文件路径配置
