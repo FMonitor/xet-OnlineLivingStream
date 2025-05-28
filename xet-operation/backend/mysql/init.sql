@@ -20,6 +20,8 @@ CREATE TABLE living_stream (
     living_title VARCHAR(255) NOT NULL,
     living_cover_url VARCHAR(255) DEFAULT NULL,
     isliving BOOLEAN DEFAULT FALSE,
+    living_url VARCHAR(255) DEFAULT NULL,
+    living_stream_code VARCHAR(255) DEFAULT NULL,
     living_stream_url VARCHAR(255) DEFAULT NULL,
     living_comment_room_url VARCHAR(255) DEFAULT NULL,
     living_expla_room_url VARCHAR(255) DEFAULT NULL,
@@ -101,9 +103,9 @@ INSERT INTO users (username, password, email, avatar_url) VALUES
 ('user3', 'password789', 'user3@example.com', 'http://lcmonitor.dynv6.net/file/user_avatar_3.svg');
 
 -- 添加示例直播信息
-INSERT INTO living_stream (creator_user_id, description, living_title, living_cover_url,living_stream_url) VALUES 
-(1, '这是第一个直播间的介绍', 'Title1','http://lcmonitor.dynv6.net/file/cover_example.svg','0'),
-(2, '这是第二个直播间的介绍', 'Title2','http://lcmonitor.dynv6.net/file/cover_example.svg','0');
+INSERT INTO living_stream (creator_user_id, description, living_title, living_cover_url) VALUES 
+(1, '这是第一个直播间的介绍', 'Title1','http://lcmonitor.dynv6.net/file/cover_example.svg'),
+(2, '这是第二个直播间的介绍', 'Title2','http://lcmonitor.dynv6.net/file/cover_example.svg');
 
 -- 添加用户与直播关系
 INSERT INTO user_living_stream (user_id, living_stream_id) VALUES 

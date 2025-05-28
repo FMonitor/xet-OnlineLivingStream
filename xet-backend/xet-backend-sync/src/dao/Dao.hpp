@@ -38,8 +38,14 @@ public:
 
     auto userdto = UserDto::createShared();
     userdto->id = row[0].get<int64_t>();
-    userdto->name = row[1].get<std::string>();
-    userdto->avatar_url = row[2].get<std::string>();
+    if (!row[1].isNull())
+      userdto->name = row[1].get<std::string>();
+    else
+      userdto->name = "";
+    if (!row[2].isNull())
+      userdto->avatar_url = row[2].get<std::string>();
+    else
+      userdto->avatar_url = "";
     result_dto->data->push_back(userdto);
 
     return result_dto;
@@ -86,9 +92,18 @@ public:
       auto livedto = LiveDto::createShared();
       livedto->living_stream_id = live_row[0].get<int64_t>();
       livedto->creator_user_id = live_row[1].get<int64_t>();
-      livedto->description = live_row[2].get<std::string>();
-      livedto->living_cover_url = live_row[3].get<std::string>();
-      livedto->living_title = live_row[4].get<std::string>();
+      if (!live_row[2].isNull())
+        livedto->description = live_row[2].get<std::string>();
+      else
+        livedto->description = "";
+      if (!live_row[3].isNull())
+        livedto->living_cover_url = live_row[3].get<std::string>();
+      else
+        livedto->living_cover_url = "";
+      if (!live_row[4].isNull())
+        livedto->living_title = live_row[4].get<std::string>();
+      else
+        livedto->living_title = "";
       // 查询该直播的所有回放
       livedto->playbacks = oatpp::List<oatpp::Object<LivePlaybackDto>>::createShared();
       auto result_playbacks = DBSession.sql(
@@ -101,9 +116,18 @@ public:
       {
         auto playbackdto = LivePlaybackDto::createShared();
         playbackdto->playback_id = playback_row[0].get<int64_t>();
-        playbackdto->playback_title = playback_row[1].get<std::string>();
-        playbackdto->created_at = playback_row[2].get<std::string>();
-        playbackdto->playback_url = playback_row[3].get<std::string>();
+        if (!playback_row[1].isNull())
+          playbackdto->playback_title = playback_row[1].get<std::string>();
+        else
+          playbackdto->playback_title = "";
+        if (!playback_row[2].isNull())
+          playbackdto->created_at = playback_row[2].get<std::string>();
+        else
+          playbackdto->created_at = "";
+        if (!playback_row[3].isNull())
+          playbackdto->playback_url = playback_row[3].get<std::string>();
+        else
+          playbackdto->playback_url = "";
         livedto->playbacks->push_back(playbackdto);
       }
 
@@ -133,7 +157,7 @@ public:
     DBSession.sql("USE xet_living_table").execute();
 
     // 查询直播信息
-    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url,isliving FROM living_stream WHERE living_stream_id = ?")
+    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url,isliving,living_url,living_stream_code FROM living_stream WHERE living_stream_id = ?")
                               .bind((int64_t)id)
                               .execute();
 
@@ -151,13 +175,35 @@ public:
 
     livedto->living_stream_id = live_row[0].get<int64_t>();
     livedto->creator_user_id = live_row[1].get<int64_t>();
-    livedto->description = live_row[2].get<std::string>();
-    livedto->living_stream_url = live_row[3].get<std::string>();
-    livedto->living_comment_room_url = live_row[4].get<std::string>();
-    livedto->living_expla_room_url = live_row[5].get<std::string>();
-    livedto->living_broadcast_room_url = live_row[6].get<std::string>();
+    if (!live_row[2].isNull())
+      livedto->description = live_row[2].get<std::string>();
+    else
+      livedto->description = "";
+    if (!live_row[3].isNull())
+      livedto->living_stream_url = live_row[3].get<std::string>();
+    else
+      livedto->living_stream_url = "";
+    if (!live_row[4].isNull())
+      livedto->living_comment_room_url = live_row[4].get<std::string>();
+    else
+      livedto->living_comment_room_url = "";
+    if (!live_row[5].isNull())
+      livedto->living_expla_room_url = live_row[5].get<std::string>();
+    else
+      livedto->living_expla_room_url = "";
+    if (!live_row[6].isNull())
+      livedto->living_broadcast_room_url = live_row[6].get<std::string>();
+    else
+      livedto->living_broadcast_room_url = "";
     livedto->isliving = live_row[7].get<bool>();
-
+    if (!live_row[8].isNull())
+      livedto->living_url = live_row[8].get<std::string>();
+    else
+      livedto->living_url = "";
+    if (!live_row[9].isNull())
+      livedto->living_stream_code = live_row[9].get<std::string>();
+    else
+      livedto->living_stream_code = "";
     // 查询评论总数并分页
     auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
@@ -172,8 +218,14 @@ public:
       comment->comment_id = live_comments_row[0].get<int64_t>();
       comment->living_stream_id = live_comments_row[1].get<int64_t>();
       comment->creator_user_id = live_comments_row[2].get<int64_t>();
-      comment->created_at = live_comments_row[3].get<std::string>();
-      comment->content = live_comments_row[4].get<std::string>();
+      if (!live_comments_row[3].isNull())
+        comment->created_at = live_comments_row[3].get<std::string>();
+      else
+        comment->created_at = "";
+      if (!live_comments_row[4].isNull())
+        comment->content = live_comments_row[4].get<std::string>();
+      else
+        comment->content = "";
       livedto->comments->push_back(comment);
     }
 
@@ -191,8 +243,14 @@ public:
       explanation->expla_id = explanation_row[0].get<int64_t>();
       explanation->living_stream_id = explanation_row[1].get<int64_t>();
       explanation->creator_user_id = explanation_row[2].get<int64_t>();
-      explanation->created_at = explanation_row[3].get<std::string>();
-      explanation->content = explanation_row[4].get<std::string>();
+      if (!explanation_row[3].isNull())
+        explanation->created_at = explanation_row[3].get<std::string>();
+      else
+        explanation->created_at = "";
+      if (!explanation_row[4].isNull())
+        explanation->content = explanation_row[4].get<std::string>();
+      else
+        explanation->content = "";
       livedto->explanations->push_back(explanation);
     }
 
@@ -210,8 +268,14 @@ public:
       file->file_id = file_row[0].get<int64_t>();
       file->living_stream_id = file_row[1].get<int64_t>();
       file->creator_user_id = file_row[2].get<int64_t>();
-      file->created_at = file_row[3].get<std::string>();
-      file->file_url = file_row[4].get<std::string>();
+      if (!file_row[3].isNull())
+        file->created_at = file_row[3].get<std::string>();
+      else
+        file->created_at = "";
+      if (!file_row[4].isNull())
+        file->file_url = file_row[4].get<std::string>();
+      else
+        file->file_url = "";
       livedto->files->push_back(file);
     }
 
@@ -242,9 +306,18 @@ public:
 
     auto playbackdto = LivePlaybackDto::createShared();
     playbackdto->playback_id = row[0].get<int64_t>();
-    playbackdto->playback_title = row[1].get<std::string>();
-    playbackdto->created_at = row[2].get<std::string>();
-    playbackdto->playback_url = row[3].get<std::string>();
+    if (!row[1].isNull())
+      playbackdto->playback_title = row[1].get<std::string>();
+    else
+      playbackdto->playback_title = "";
+    if (!row[2].isNull())
+      playbackdto->created_at = row[2].get<std::string>();
+    else
+      playbackdto->created_at = "";
+    if (!row[3].isNull())
+      playbackdto->playback_url = row[3].get<std::string>();
+    else
+      playbackdto->playback_url = "";
     result_dto->data->push_back(playbackdto);
 
     return result_dto;
@@ -290,8 +363,14 @@ public:
       comment->comment_id = live_comments_row[0].get<int64_t>();
       comment->living_stream_id = live_comments_row[1].get<int64_t>();
       comment->creator_user_id = live_comments_row[2].get<int64_t>();
-      comment->created_at = live_comments_row[3].get<std::string>();
-      comment->content = live_comments_row[4].get<std::string>();
+      if (!live_comments_row[3].isNull())
+        comment->created_at = live_comments_row[3].get<std::string>();
+      else
+        comment->created_at = "";
+      if (!live_comments_row[4].isNull())
+        comment->content = live_comments_row[4].get<std::string>();
+      else
+        comment->content = "";
       result_dto->data->push_back(comment);
     }
 
@@ -339,8 +418,14 @@ public:
       explanation->expla_id = explanation_row[0].get<int64_t>();
       explanation->living_stream_id = explanation_row[1].get<int64_t>();
       explanation->creator_user_id = explanation_row[2].get<int64_t>();
-      explanation->created_at = explanation_row[3].get<std::string>();
-      explanation->content = explanation_row[4].get<std::string>();
+      if (!explanation_row[3].isNull())
+        explanation->created_at = explanation_row[3].get<std::string>();
+      else
+        explanation->created_at = "";
+      if (!explanation_row[4].isNull())
+        explanation->content = explanation_row[4].get<std::string>();
+      else
+        explanation->content = "";
       result_dto->data->push_back(explanation);
     }
 
@@ -388,8 +473,14 @@ public:
       file->file_id = file_row[0].get<int64_t>();
       file->living_stream_id = file_row[1].get<int64_t>();
       file->creator_user_id = file_row[2].get<int64_t>();
-      file->created_at = file_row[3].get<std::string>();
-      file->file_url = file_row[4].get<std::string>();
+      if (!file_row[3].isNull())
+        file->created_at = file_row[3].get<std::string>();
+      else
+        file->created_at = "";
+      if (!file_row[4].isNull())
+        file->file_url = file_row[4].get<std::string>();
+      else
+        file->file_url = "";
       result_dto->data->push_back(file);
     }
 
@@ -493,8 +584,6 @@ public:
 
     return result_dto;
   }
-
-
 };
 
 #endif // Dao_HPP

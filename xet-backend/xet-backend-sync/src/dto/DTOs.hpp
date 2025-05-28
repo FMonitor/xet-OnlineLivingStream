@@ -95,6 +95,8 @@ class LiveDto : public oatpp::DTO
   DTO_FIELD(Int64, creator_user_id);
   DTO_FIELD(Boolean, isliving);
   DTO_FIELD(String, description);
+  DTO_FIELD(String, living_url);
+  DTO_FIELD(String, living_stream_code);
   DTO_FIELD(String, living_stream_url);
   DTO_FIELD(String, living_cover_url);
   DTO_FIELD(String, living_title);
