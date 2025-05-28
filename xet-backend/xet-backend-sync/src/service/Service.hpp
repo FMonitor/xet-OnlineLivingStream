@@ -29,7 +29,7 @@ public:
   oatpp::Object<MessageDto> instertLiveComment(oatpp::Object<LiveCommentDto> comment);
   oatpp::Object<MessageDto> instertLiveExpla(oatpp::Object<LiveExplaDto> explanation);
   oatpp::Object<MessageDto> instertLiveFile(oatpp::Object<LiveFileDto> file);
-  oatpp::Object<StartLivingDto> startLiving(const oatpp::Int64 &id);
+  oatpp::Object<RStartLivingDto> startLiving(const oatpp::Int64 &id);
   oatpp::Object<MessageDto> endLiving(const oatpp::Int64 &id);
 };
 

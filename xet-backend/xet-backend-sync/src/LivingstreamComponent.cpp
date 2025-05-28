@@ -5,6 +5,10 @@
 #include <string>
 #include <cstdlib>
 #include <iostream>
+#include <sys/prctl.h>
+#include <signal.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 std::map<int, int> LivingstreamPid;
 
@@ -14,9 +18,9 @@ std::map<int, int> LivingstreamPid;
 void start_ffmpeg(int64_t living_id, int64_t playback_id)
 {
   // OBS推流地址
-  std::string obs_rtmp_url = "rtmp://localhost/live/obs_stream/"+ std::to_string(living_id);
-  // HLS输出目录
-  std::string hls_output_dir = "../../xet-backend-async/file";
+  std::string obs_rtmp_url = "rtmp://localhost:1935/live/"+ std::to_string(living_id);
+  // 构造输出路径
+  std::string hls_output_dir = "../../xet-backend-async/file/" + std::to_string(playback_id);
   // HLS分段时长
   int hls_time = 2;
   // 回放ID字符串
@@ -27,6 +31,19 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
   // ts文件命名格式
   std::string ts_pattern = hls_output_dir + "/playlist_%03d.ts";
 
+  // 拼接输出文件（m3u8）路径
+  std::string m3u8_full_path = hls_output_dir + "/" + m3u8_name;
+
+  // 拼接分片文件（ts）路径模式
+  std::string ts_full_pattern = hls_output_dir + "/" + ts_pattern;
+  if (mkdir(hls_output_dir.c_str(), 0755) == -1)
+  {
+    if (errno != EEXIST)
+    {
+      std::cerr << "Failed to create directory: " << hls_output_dir << std::endl;
+      return;
+    }
+  }
   pid_t pid = fork();
   if (pid < 0)
   {
@@ -35,6 +52,7 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
   }
   if (pid == 0)
   {
+    prctl(PR_SET_PDEATHSIG, SIGHUP);
     // 子进程
     execlp(
         "ffmpeg", "ffmpeg",
@@ -44,9 +62,9 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
         "-f", "hls",
         "-hls_time", std::to_string(hls_time).c_str(),
         "-hls_list_size", "0",
-        "-hls_path", hls_output_dir.c_str(),
-        "-hls_segment_filename", ts_pattern.c_str(),
-        "-master_pl_name", m3u8_name.c_str(),
+        // 🚨🚨🚨 重点修改：移除 "-hls_path"，替换为完整路径
+        "-hls_segment_filename", ts_full_pattern.c_str(),
+        m3u8_full_path.c_str(),
         (char *)nullptr);
     // execlp失败
     std::cerr << "execlp ffmpeg failed!" << std::endl;

@@ -68,12 +68,12 @@ public:
     return createDtoResponse(Status::CODE_200, service.getLiveById(id));
   };
   ADD_CORS(StartLivePOST)
-  ENDPOINT("GET", "/home/live/{id}/start", StartLivePOST, PATH(Int64, id))
+  ENDPOINT("POST", "/home/live/{id}/start", StartLivePOST, PATH(Int64, id))
   {
     return createDtoResponse(Status::CODE_200, service.startLiving(id));
   };
   ADD_CORS(EndLivePOST)
-  ENDPOINT("GET", "/home/live/{id}/end", EndLivePOST, PATH(Int64, id))
+  ENDPOINT("POST", "/home/live/{id}/end", EndLivePOST, PATH(Int64, id))
   {
     return createDtoResponse(Status::CODE_200, service.endLiving(id));
   };
