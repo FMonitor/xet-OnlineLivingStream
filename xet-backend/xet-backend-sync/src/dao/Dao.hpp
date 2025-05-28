@@ -604,16 +604,12 @@ public:
 #endif
     char time_buf[32];
     std::strftime(time_buf, sizeof(time_buf), "%Y%m%d%H%M%S", &tm_now);
-    std::string playback_title = "living" + std::to_string(id) + time_buf;
-
-    // 构造playback_url
-    std::string playback_url = "rtmp://localhost/live/obs_stream/" + std::to_string(id);
+    std::string playback_title = "living_" + std::to_string(id) + time_buf;
 
     // 插入live_playback表
-    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title, playback_url) VALUES (?, ?, ?)")
+    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title) VALUES (?, ?)")
         .bind((int64_t)id)
         .bind(playback_title)
-        .bind(playback_url)
         .execute();
 
     // 获取刚插入的playback_id
@@ -621,7 +617,7 @@ public:
     int64_t playback_id = result.fetchOne()[0].get<int64_t>();
 
     // 构造living_stream_url, living_stream_code, living_url
-    std::string living_stream_url = playback_url;
+    std::string living_stream_url = "rtmp://localhost/live/obs_stream/";
     std::string living_stream_code = std::to_string(playback_id);
     std::string living_url = "http://localhost:8001/file/" + living_stream_code + "/playback" + living_stream_code + ".m3u8";
 
@@ -631,6 +627,12 @@ public:
         .bind(living_stream_code)
         .bind(living_url)
         .bind((int64_t)id)
+        .execute();
+
+    //更新回放的回放地址
+    DBSession.sql("UPDATE live_playback SET playback_url = ? WHERE playback_id = ?")
+        .bind(living_url)
+        .bind(playback_id)
         .execute();
 
     start_ffmpeg(id, playback_id);
