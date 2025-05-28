@@ -33,3 +33,4 @@ jobs:
           cd ..
           /home/admin/xet-OnlineLivingStream/local-deploy.sh
           EOF
+          
