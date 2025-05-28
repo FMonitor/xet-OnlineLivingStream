@@ -218,16 +218,24 @@ export const useLiveStore = defineStore('live', () => {
 
     // 连接到直播间聊天室
     async function connectToChat(liveId: string | number, userId: number) {
+        console.log('=== 连接WebSocket聊天室 ===');
+        console.log('直播ID:', liveId);
+        console.log('用户ID:', userId);
+        console.log('聊天室URLs:', {
+            comment: commentRoomUrl.value,
+            explanation: explanationRoomUrl.value,
+            broadcast: broadcastRoomUrl.value
+        });
+
         try {
             await wsManager.connect(liveId, userId);
-            console.log('成功连接到聊天室');
+            console.log('WebSocket聊天室连接成功');
             return true;
         } catch (error) {
-            console.error('连接聊天室失败:', error);
+            console.error('WebSocket聊天室连接失败:', error);
             return false;
         }
     }
-
     function disconnectFromChat() {
         wsManager.disconnect();
     }

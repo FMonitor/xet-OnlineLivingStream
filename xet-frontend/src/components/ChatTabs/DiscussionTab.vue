@@ -1,5 +1,5 @@
 <template>
-    <div class="discussion-tab" ref="containerRef">
+    <div class="discussion-tab" ref="containerRef" @scroll="handleScroll">
         <!-- 系统提示区域 -->
         <div class="system-notification">
             <div class="notification-content">
@@ -14,7 +14,7 @@
                 @click="loadMore" 
                 :disabled="isLoading">
                 <img v-if="isLoading" src="../../assets/loading.gif" alt="加载中..." class="loading-gif" />
-                <span v-else>加载更多消息</span>
+                <span v-else>上滑加载更多消息</span>
             </button>
         </div>
 
@@ -91,6 +91,8 @@ const emit = defineEmits(['load-more', 'retry-message'])
 const containerRef = ref<HTMLElement | null>(null)
 const currentUserName = "我"
 const lastScrollHeight = ref(0)
+const isUserScrolling = ref(false) // 标记用户是否正在手动滚动
+const autoScrollThreshold = 100 // 距离底部多少像素内才自动滚动
 
 // 根据API返回的Comment格式，计算是否是自己发送的消息
 const formattedMessages = computed(() => {
@@ -99,6 +101,66 @@ const formattedMessages = computed(() => {
         id: msg.comment_id,
         isSelf: msg.creator_user_id === props.currentUserId
     }))
+})
+
+// 检查是否接近底部
+const isNearBottom = () => {
+    if (!containerRef.value) return false
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.value
+    return scrollHeight - scrollTop - clientHeight < autoScrollThreshold
+}
+
+// 滚动到底部
+const scrollToBottom = () => {
+    if (!containerRef.value) return
+    
+    nextTick(() => {
+        if (containerRef.value) {
+            containerRef.value.scrollTop = containerRef.value.scrollHeight
+        }
+    })
+}
+
+// 处理滚动事件
+const handleScroll = (event: Event) => {
+    const target = event.target as HTMLElement
+    
+    // 检查是否滚动到顶部，触发加载更多
+    if (target.scrollTop === 0 && props.hasMoreData && !props.isLoading) {
+        loadMore()
+        return
+    }
+    
+    // 检查用户是否手动滚动
+    isUserScrolling.value = !isNearBottom()
+}
+
+// 监听消息列表变化
+watch(() => props.messages.length, (newCount, oldCount) => {
+    if (newCount > oldCount) {
+        // 如果是加载更多历史消息（从顶部加载）
+        if (lastScrollHeight.value > 0) {
+            // 保持滚动位置
+            nextTick(() => {
+                if (containerRef.value) {
+                    const newContentHeight = containerRef.value.scrollHeight
+                    const heightDiff = newContentHeight - lastScrollHeight.value
+                    containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0
+                    lastScrollHeight.value = 0
+                }
+            })
+        } else {
+            scrollToBottom()
+        }
+    }
+}, { flush: 'post' })
+
+// 监听具体的消息内容变化（用于检测新消息）
+watch(() => props.messages.map(m => m.content).join(''), () => {
+    // 当有新的消息内容时，如果用户接近底部则自动滚动
+    if (isNearBottom() || !isUserScrolling.value) {
+        scrollToBottom()
+    }
 })
 
 const getReactiveAvatar = computed(() => {
@@ -133,26 +195,6 @@ function loadMore() {
     emit('load-more');
 }
 
-// 监听消息列表变化，保持滚动位置
-watch(() => props.messages.length, (newCount, oldCount) => {
-    // 如果是加载更多（消息数增加）
-    if (newCount > oldCount && lastScrollHeight.value > 0) {
-        // 在DOM更新后执行
-        nextTick(() => {
-            if (containerRef.value) {
-                // 计算新旧内容高度差
-                const newContentHeight = containerRef.value.scrollHeight;
-                const heightDiff = newContentHeight - lastScrollHeight.value;
-                
-                // 设置新的滚动位置，保持用户看到的内容不变
-                containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0;
-                
-                // 重置记录的高度
-                lastScrollHeight.value = 0;
-            }
-        });
-    }
-});
 
 // 格式化时间
 function formatTime(timestamp: string): string {
@@ -174,6 +216,10 @@ function formatTime(timestamp: string): string {
         minute: '2-digit'
     })
 }
+
+onMounted(() => {
+    scrollToBottom()
+})
 
 const systemNotification = '系统提示：直播内容及互动评论严禁传播违法或不良信息，如有违反，平台将采取封禁措施。'
 </script>
@@ -206,6 +252,15 @@ const systemNotification = '系统提示：直播内容及互动评论严禁传�
     gap: 12px;
     overflow-y: auto;
     max-height: 100%;
+    scroll-behavior: smooth;
+    
+    /* 隐藏滚动条 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.discussion-tab::-webkit-scrollbar {
+    display: none;
 }
 
 .loading-more {
