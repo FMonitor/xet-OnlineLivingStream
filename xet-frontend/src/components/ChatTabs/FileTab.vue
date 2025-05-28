@@ -1,5 +1,5 @@
 <template>
-    <div class="file-tab" ref="containerRef">
+    <div class="file-tab" ref="containerRef" @scroll="handleScroll">
         <!-- 系统提示区域 -->
         <div class="system-notification">
             <div class="notification-content">
@@ -11,7 +11,7 @@
         <div v-if="hasMoreData" class="load-more-container">
             <button class="load-more-button" @click="loadMore" :disabled="isLoading">
                 <img v-if="isLoading" src="../../assets/loading.gif" alt="加载中..." class="loading-gif" />
-                <span v-else>加载更多文件</span>
+                <span v-else>上滑加载更多文件</span>
             </button>
         </div>
 
@@ -97,6 +97,36 @@ const props = defineProps({
 const emit = defineEmits(['load-more']);
 const containerRef = ref<HTMLElement | null>(null);
 const lastScrollHeight = ref(0)
+const isUserScrolling = ref(false)
+const autoScrollThreshold = 100
+
+// 自动滚动相关函数
+const isNearBottom = () => {
+    if (!containerRef.value) return false
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.value
+    return scrollHeight - scrollTop - clientHeight < autoScrollThreshold
+}
+
+const scrollToBottom = () => {
+    if (!containerRef.value) return
+
+    nextTick(() => {
+        if (containerRef.value) {
+            containerRef.value.scrollTop = containerRef.value.scrollHeight
+        }
+    })
+}
+
+const handleScroll = (event: Event) => {
+    const target = event.target as HTMLElement
+
+    if (target.scrollTop === 0 && props.hasMoreData && !props.isLoading) {
+        loadMore()
+        return
+    }
+
+    isUserScrolling.value = !isNearBottom()
+}
 
 // 将API格式的文件数据转换为组件期望的格式
 const formattedFiles = computed(() => {
@@ -109,9 +139,32 @@ const formattedFiles = computed(() => {
         },
         timestamp: formatTime(file.created_at),
         url: file.file_url,
-        size: file.file_size || 0 // 如果API没返回大小，默认为0
+        size: file.file_size || 0
     }));
 });
+
+// 监听文件列表变化
+watch(() => props.files.length, (newCount, oldCount) => {
+    if (newCount > oldCount) {
+        if (lastScrollHeight.value > 0) {
+            nextTick(() => {
+                if (containerRef.value) {
+                    const newContentHeight = containerRef.value.scrollHeight
+                    const heightDiff = newContentHeight - lastScrollHeight.value
+                    containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0
+                    lastScrollHeight.value = 0
+                }
+            })
+        } else {
+            nextTick(() => {
+                if (!isUserScrolling.value || isNearBottom()) {
+                    scrollToBottom()
+                    isUserScrolling.value = false
+                }
+            })
+        }
+    }
+}, { flush: 'post' })
 
 // 加载更多函数
 function loadMore() {
@@ -120,21 +173,6 @@ function loadMore() {
     }
     emit('load-more');
 }
-
-// 监听文件列表变化，保持滚动位置
-watch(() => props.files.length, (newCount, oldCount) => {
-    if (newCount > oldCount && lastScrollHeight.value > 0) {
-        nextTick(() => {
-            if (containerRef.value) {
-                const newContentHeight = containerRef.value.scrollHeight;
-                const heightDiff = newContentHeight - lastScrollHeight.value;
-
-                containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0;
-                lastScrollHeight.value = 0;
-            }
-        });
-    }
-});
 
 const getReactiveAvatar = computed(() => {
     avatarUpdateTrigger.value;
@@ -208,14 +246,6 @@ function downloadFile(url: string): void {
     link.click();
 }
 
-// 处理滚动加载更多
-function handleScroll(event: Event) {
-    const target = event.target as HTMLElement;
-    if (target.scrollTop === 0) {
-        emit('load-more');
-    }
-}
-
 // 格式化时间
 function formatTime(timestamp: string): string {
     if (!timestamp) return '';
@@ -266,6 +296,18 @@ const systemNotification = '系统提示：上传的文件仅用于学习交流�
     gap: 12px;
     overflow-y: auto;
     max-height: 100%;
+    scroll-behavior: smooth;
+
+    /* 隐藏滚动条 - 兼容所有浏览器 */
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE 和 Edge */
+}
+
+/* WebKit 浏览器（Chrome、Safari、新版 Edge） */
+.file-tab::-webkit-scrollbar {
+    display: none;
 }
 
 .file-item {

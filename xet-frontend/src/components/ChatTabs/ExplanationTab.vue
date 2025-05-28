@@ -1,5 +1,5 @@
 <template>
-    <div class="explanation-tab" ref="containerRef">
+   <div class="explanation-tab" ref="containerRef" @scroll="handleScroll">
         <!-- 系统提示区域 -->
         <div class="system-notification">
             <div class="notification-content">
@@ -11,7 +11,7 @@
         <div v-if="hasMoreData" class="load-more-container">
             <button class="load-more-button" @click="loadMore" :disabled="isLoading">
                 <img v-if="isLoading" src="../../assets/loading.gif" alt="加载中..." class="loading-gif" />
-                <span v-else>加载更多讲解</span>
+                <span v-else>上滑加载更多讲解</span>
             </button>
         </div>
 
@@ -88,6 +88,70 @@ const containerRef = ref<HTMLElement | null>(null)
 const systemNotification = '系统提示：直播内容及互动评论严禁传播违法或不良信息，如有违反，平台将采取封禁措施。'
 const currentUserName = "我"
 const lastScrollHeight = ref(0)
+const isUserScrolling = ref(false)
+const autoScrollThreshold = 100
+
+// 自动滚动相关函数
+const isNearBottom = () => {
+    if (!containerRef.value) return false
+    const { scrollTop, scrollHeight, clientHeight } = containerRef.value
+    return scrollHeight - scrollTop - clientHeight < autoScrollThreshold
+}
+
+const scrollToBottom = () => {
+    if (!containerRef.value) return
+    
+    nextTick(() => {
+        if (containerRef.value) {
+            containerRef.value.scrollTop = containerRef.value.scrollHeight
+        }
+    })
+}
+
+const handleScroll = (event: Event) => {
+    const target = event.target as HTMLElement
+    
+    if (target.scrollTop === 0 && props.hasMoreData && !props.isLoading) {
+        loadMore()
+        return
+    }
+    
+    isUserScrolling.value = !isNearBottom()
+}
+
+// 格式化讲解数据
+const formattedExplanations = computed(() => {
+    return props.messages.map(expla => ({
+        ...expla,
+        id: expla.expla_id,
+        isSelf: expla.creator_user_id === props.currentUserId
+    }))
+})
+
+// 监听消息变化
+watch(() => props.messages.length, (newCount, oldCount) => {
+    if (newCount > oldCount) {
+        if (lastScrollHeight.value > 0) {
+            nextTick(() => {
+                if (containerRef.value) {
+                    const newContentHeight = containerRef.value.scrollHeight
+                    const heightDiff = newContentHeight - lastScrollHeight.value
+                    containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0
+                    lastScrollHeight.value = 0
+                }
+            })
+        } else {
+            scrollToBottom()
+        }
+    }
+}, { flush: 'post' })
+
+watch(() => props.messages.map(m => m.content).join(''), () => {
+    if (isNearBottom() || !isUserScrolling.value) {
+        scrollToBottom()
+    }
+})
+
 
 const getReactiveAvatar = computed(() => {
     avatarUpdateTrigger.value;
@@ -110,15 +174,6 @@ function retryMessage(message: Comment | Explanation) {
     emit('retry-message', message);
 }
 
-// 格式化讲解数据
-const formattedExplanations = computed(() => {
-    return props.messages.map(expla => ({
-        ...expla,
-        id: expla.expla_id,
-        isSelf: expla.creator_user_id === props.currentUserId
-    }))
-})
-
 // 加载更多函数
 function loadMore() {
     if (containerRef.value) {
@@ -126,21 +181,6 @@ function loadMore() {
     }
     emit('load-more');
 }
-
-// 监听消息列表变化，保持滚动位置
-watch(() => props.messages.length, (newCount, oldCount) => {
-    if (newCount > oldCount && lastScrollHeight.value > 0) {
-        nextTick(() => {
-            if (containerRef.value) {
-                const newContentHeight = containerRef.value.scrollHeight;
-                const heightDiff = newContentHeight - lastScrollHeight.value;
-
-                containerRef.value.scrollTop = heightDiff > 0 ? heightDiff : 0;
-                lastScrollHeight.value = 0;
-            }
-        });
-    }
-});
 
 // 格式化时间
 function formatTime(timestamp: string): string {
@@ -161,7 +201,12 @@ function formatTime(timestamp: string): string {
         hour: '2-digit',
         minute: '2-digit'
     })
+
+    
 }
+onMounted(() => {
+    scrollToBottom()
+})
 </script>
 
 <style scoped>
@@ -191,7 +236,13 @@ function formatTime(timestamp: string): string {
     gap: 12px;
     overflow-y: auto;
     max-height: 100%;
+    scroll-behavior: smooth;
+    
+    /* 隐藏滚动条 */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }
+
 
 .loading-more {
     text-align: center;
