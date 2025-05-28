@@ -1,6 +1,6 @@
 #include "MySQLComponent.hpp"
 
-std::string url = "root:123456@mysql:33060";
+std::string url = "root:123456@localhost:33060";
 
 mysqlx::Client cli(url, mysqlx::ClientOption::POOL_MAX_SIZE, 20);
 
