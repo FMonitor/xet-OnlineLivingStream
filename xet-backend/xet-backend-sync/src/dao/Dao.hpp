@@ -341,7 +341,6 @@ public:
       explanation->content = explanation_row[4].get<std::string>();
       result_dto->data->push_back(explanation);
     }
-
     result_dto->statusCode = 200;
     result_dto->message = "Explanations retrieved successfully.";
     return result_dto;
