@@ -29,7 +29,7 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
   // m3u8文件名
   std::string m3u8_name = "playback" + playback_id_str + ".m3u8";
   // ts文件命名格式
-  std::string ts_pattern = hls_output_dir + "/playlist_%03d.ts";
+  std::string ts_pattern = "playlist_%03d.ts";
 
   // 拼接输出文件（m3u8）路径
   std::string m3u8_full_path = hls_output_dir + "/" + m3u8_name;
