@@ -32,9 +32,9 @@ CREATE TRIGGER set_room_url
 BEFORE INSERT ON living_stream
 FOR EACH ROW
 BEGIN
-  SET NEW.living_comment_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_comment_room/?nickname=');
-  SET NEW.living_expla_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_expla_room/?nickname=');
-  SET NEW.living_broadcast_room_url = CONCAT('ws://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_broadcast_room/?nickname=');
+  SET NEW.living_comment_room_url = CONCAT('wss://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_comment_room/?nickname=');
+  SET NEW.living_expla_room_url = CONCAT('wss://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_expla_room/?nickname=');
+  SET NEW.living_broadcast_room_url = CONCAT('wss://lcmonitor.dynv6.net/ws/chat/living_', NEW.living_stream_id, '_broadcast_room/?nickname=');
 END$$
 DELIMITER ;
 
