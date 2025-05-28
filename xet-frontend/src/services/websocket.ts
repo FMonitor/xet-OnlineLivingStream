@@ -31,8 +31,8 @@ export class LiveWebSocketManager {
 
     // 从store获取WebSocket URL
     const liveStore = useLiveStore();
-    const commentUrl = liveStore.commentRoomUrl.replace('?nickname=', `?nickname=${userId}_comment&`);
-    const explanationUrl = liveStore.explanationRoomUrl.replace('?nickname=', `?nickname=${userId}_explanation&`);
+    const commentUrl = liveStore.commentRoomUrl.replace('?nickname=', `?nickname=${userId}`);
+    const explanationUrl = liveStore.explanationRoomUrl.replace('?nickname=', `?nickname=${userId}`);
 
     // 同时连接两个WebSocket
     await Promise.all([
