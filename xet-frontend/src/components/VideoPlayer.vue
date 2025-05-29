@@ -148,11 +148,17 @@ import { inject, ref, watchEffect, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 import { useLiveStore } from '../store'
+import Hls from 'hls.js' 
 
 // 使用 store
 const liveStore = useLiveStore()
 const route = useRoute()
 const minLoadingTime = ref(true);
+
+// HLS 支持
+const hls = ref<Hls | null>(null)
+const isHLSSupported = ref(false)
+const currentStreamType = ref<'hls' | 'mp4' | 'unknown'>('unknown')
 
 // 创建计算属性，优先使用 store 中的 URL
 const videoSrc = computed(() => {
@@ -222,65 +228,52 @@ const showCenterIcon = ref(false) // 控制中心图标的显示
 const fadeOutIcon = ref(false)
 let iconTimer: number | null = null
 
+// 支持不同的视频类型
 watchEffect(() => {
   if (liveStore.playback_url) {
     // console.log('视频地址已更新:', liveStore.playback_url)
 
-    // 判断是否为回放模式
+    // 检测流类型
+    currentStreamType.value = detectStreamType(liveStore.playback_url)
+    // console.log('检测到流类型:', currentStreamType.value)
+
+    // 根据模式和流类型更新线路信息
     if (liveStore.isPlaybackMode) {
       console.log('回放模式：加载视频文件')
-      
-      // 回放模式：使用视频文件，更新线路信息
       lines.value = [
-        { name: `回放视频${liveStore.playbackId}`, url: liveStore.playback_url },
-        { name: `备用线路`, url: liveStore.playback_url }
+        { name: `回放线路1`, url: liveStore.playback_url },
+        { name: `回放线路2`, url: liveStore.playback_url }
       ]
     } else {
       console.log('直播模式：加载直播流')
-      
-      // 直播模式：使用直播流
-      lines.value = [
-        { name: '直播线路1', url: liveStore.playback_url },
-        { name: '直播线路2', url: liveStore.playback_url }
-      ]
+      if (currentStreamType.value === 'hls') {
+        lines.value = [
+          { name: '直播线路1 (HLS)', url: liveStore.playback_url },
+          { name: '直播线路2 (HLS)', url: liveStore.playback_url }
+        ]
+      } else {
+        lines.value = [
+          { name: '直播线路1', url: liveStore.playback_url },
+          { name: '直播线路2', url: liveStore.playback_url }
+        ]
+      }
     }
 
     // 默认选择第一条线路
     currentLine.value = lines.value[0]
 
-    // 如果视频元素已经存在，直接更新源
+    // 如果视频元素已经存在，根据类型初始化播放器
     const video = videoRef.value
     if (video) {
-      video.src = liveStore.playback_url
-      video.load()
-
-      // 回放模式和直播模式的播放策略不同
-      if (liveStore.isPlaybackMode) {
-        // 回放模式：不自动播放，等待用户点击
-        // console.log('回放模式：等待用户手动播放')
-        isPlaying.value = false
+      isLoading.value = true
+      
+      if (currentStreamType.value === 'hls') {
+        initHLS(video, liveStore.playback_url)
+      } else if (currentStreamType.value === 'mp4') {
+        initMP4(video, liveStore.playback_url)
       } else {
-        // 直播模式：尝试自动播放
-        video.play()
-          .then(() => {
-            isPlaying.value = true
-            // console.log('直播自动播放成功')
-          })
-          .catch(err => {
-            if (err.name === 'NotAllowedError') {
-              console.log('尝试静音播放...')
-              video.muted = true
-              previousVolume.value = volume.value
-              volume.value = 0
-              isMuted.value = true
-              video.play()
-                .then(() => {
-                  isPlaying.value = true
-                  console.log('静音自动播放成功')
-                })
-                .catch(err2 => console.error('静音也无法自动播放:', err2))
-            }
-          })
+        console.warn('未知的流类型，尝试使用原生播放器')
+        initMP4(video, liveStore.playback_url)
       }
     }
   }
@@ -318,6 +311,288 @@ function formatTime(seconds: number): string {
   return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
 }
 
+// 检测视频类型的函数
+function detectStreamType(url: string): 'hls' | 'mp4' | 'unknown' {
+  if (!url) return 'unknown'
+  
+  const urlLower = url.toLowerCase()
+  if (urlLower.includes('.m3u8')) {
+    return 'hls'
+  } else if (urlLower.includes('.mp4') || urlLower.includes('.webm') || urlLower.includes('.ogg')) {
+    return 'mp4'
+  }
+  
+  return 'unknown'
+}
+
+// 初始化HLS播放器
+function initHLS(video: HTMLVideoElement, url: string) {
+  console.log('初始化HLS播放器，URL:', url)
+  
+  // 销毁现有的HLS实例
+  if (hls.value) {
+    hls.value.destroy()
+    hls.value = null
+  }
+
+  if (Hls.isSupported()) {
+    console.log('HLS.js 支持，使用HLS.js播放')
+    isHLSSupported.value = true
+    
+    const hlsInstance = new Hls({
+      // HLS配置保持不变...
+      enableWorker: true,
+      lowLatencyMode: true,
+      backBufferLength: 90,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 300,
+      maxBufferSize: 60 * 1000 * 1000,
+      maxBufferHole: 0.5,
+      highBufferWatchdogPeriod: 2,
+      nudgeOffset: 0.1,
+      nudgeMaxRetry: 3,
+      maxFragLookUpTolerance: 0.25,
+      liveSyncDurationCount: 3,
+      liveMaxLatencyDurationCount: 10,
+      liveDurationInfinity: true,
+      liveBackBufferLength: 0,
+      enableSoftwareAES: true,
+      manifestLoadingTimeOut: 10000,
+      manifestLoadingMaxRetry: 4,
+      manifestLoadingRetryDelay: 1000,
+      levelLoadingTimeOut: 10000,
+      levelLoadingMaxRetry: 4,
+      levelLoadingRetryDelay: 1000,
+      fragLoadingTimeOut: 20000,
+      fragLoadingMaxRetry: 6,
+      fragLoadingRetryDelay: 1000,
+    })
+
+    // HLS事件监听
+    hlsInstance.on(Hls.Events.MEDIA_ATTACHED, () => {
+      console.log('HLS: 媒体已附加')
+    })
+
+    hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event: any, data: any) => {
+      console.log('HLS: 清单解析完成', data.levels.length + ' 质量级别')
+      isLoading.value = false
+      
+      // 修复自动播放逻辑
+      if (liveStore.isPlaybackMode) {
+        console.log('回放模式：自动开始播放')
+        // 回放模式也要实际调用 play()
+        video.play()
+          .then(() => {
+            isPlaying.value = true
+            console.log('HLS回放自动播放成功')
+          })
+          .catch(err => {
+            if (err.name === 'NotAllowedError') {
+              console.log('回放模式尝试静音播放...')
+              video.muted = true
+              previousVolume.value = volume.value
+              volume.value = 0
+              isMuted.value = true
+              video.play()
+                .then(() => {
+                  isPlaying.value = true
+                  console.log('HLS回放静音自动播放成功')
+                })
+                .catch(err2 => {
+                  console.error('HLS回放静音也无法自动播放:', err2)
+                  // 设置为暂停状态，等待用户手动播放
+                  isPlaying.value = false
+                })
+            } else {
+              console.error('HLS回放播放失败:', err)
+              isPlaying.value = false
+            }
+          })
+      } else {
+        console.log('直播模式：尝试自动播放')
+        video.play()
+          .then(() => {
+            isPlaying.value = true
+            console.log('HLS直播自动播放成功')
+          })
+          .catch(err => {
+            if (err.name === 'NotAllowedError') {
+              console.log('尝试静音播放...')
+              video.muted = true
+              previousVolume.value = volume.value
+              volume.value = 0
+              isMuted.value = true
+              video.play()
+                .then(() => {
+                  isPlaying.value = true
+                  console.log('HLS静音自动播放成功')
+                })
+                .catch(err2 => console.error('HLS静音也无法自动播放:', err2))
+            }
+          })
+      }
+    })
+
+    // 其他HLS事件监听保持不变...
+    hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (event: any, data: any) => {
+      console.log('HLS: 切换到质量级别', data.level)
+    })
+
+    hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
+      console.error('HLS错误:', data)
+      
+      if (data.fatal) {
+        switch (data.type) {
+          case Hls.ErrorTypes.NETWORK_ERROR:
+            console.log('HLS: 网络错误，尝试恢复...')
+            hlsInstance.startLoad()
+            break
+          case Hls.ErrorTypes.MEDIA_ERROR:
+            console.log('HLS: 媒体错误，尝试恢复...')
+            hlsInstance.recoverMediaError()
+            break
+          default:
+            console.log('HLS: 致命错误，销毁并重试...')
+            hlsInstance.destroy()
+            hls.value = null
+            handleHLSFallback(video, url)
+            break
+        }
+      }
+    })
+
+    hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
+      if (data.details === 'bufferStalledError') {
+        console.log('HLS: 缓冲停滞')
+        isLoading.value = true
+      }
+    })
+
+    hlsInstance.on(Hls.Events.BUFFER_FLUSHED, () => {
+      console.log('HLS: 缓冲刷新')
+      isLoading.value = false
+    })
+
+    // 附加到视频元素并加载源
+    hlsInstance.attachMedia(video)
+    hlsInstance.loadSource(url)
+    hls.value = hlsInstance
+
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    // Safari原生支持HLS
+    console.log('使用Safari原生HLS播放')
+    isHLSSupported.value = true
+    video.src = url
+    video.load()
+    
+    // 统一的播放逻辑
+    video.addEventListener('loadeddata', () => {
+      video.play()
+        .then(() => {
+          isPlaying.value = true
+          console.log('Safari HLS播放成功')
+        })
+        .catch(err => {
+          console.error('Safari HLS播放失败:', err)
+          isPlaying.value = false
+        })
+    }, { once: true })
+    
+  } else {
+    console.error('当前浏览器不支持HLS播放')
+    isHLSSupported.value = false
+    handleHLSFallback(video, url)
+  }
+}
+
+// 初始化MP4播放器
+function initMP4(video: HTMLVideoElement, url: string) {
+  console.log('初始化MP4播放器，URL:', url)
+  
+  // 销毁HLS实例（如果存在）
+  if (hls.value) {
+    hls.value.destroy()
+    hls.value = null
+  }
+
+  // 使用原生video标签播放
+  video.src = url
+  video.load()
+
+  // 修复播放策略 - 回放和直播都自动播放
+  if (liveStore.isPlaybackMode) {
+    console.log('回放模式：自动开始播放')
+    
+    // 等待视频加载完成后播放
+    video.addEventListener('loadeddata', () => {
+      video.play()
+        .then(() => {
+          isPlaying.value = true
+          console.log('MP4回放自动播放成功')
+        })
+        .catch(err => {
+          if (err.name === 'NotAllowedError') {
+            console.log('回放模式尝试静音播放...')
+            video.muted = true
+            previousVolume.value = volume.value
+            volume.value = 0
+            isMuted.value = true
+            video.play()
+              .then(() => {
+                isPlaying.value = true
+                console.log('MP4回放静音自动播放成功')
+              })
+              .catch(err2 => {
+                console.error('MP4回放静音也无法自动播放:', err2)
+                isPlaying.value = false
+              })
+          } else {
+            console.error('MP4回放播放失败:', err)
+            isPlaying.value = false
+          }
+        })
+    }, { once: true })
+    
+  } else {
+    console.log('直播模式：自动开始播放')
+    
+    video.addEventListener('loadeddata', () => {
+      video.play()
+        .then(() => {
+          isPlaying.value = true
+          console.log('MP4直播自动播放成功')
+        })
+        .catch(err => {
+          if (err.name === 'NotAllowedError') {
+            console.log('尝试静音播放...')
+            video.muted = true
+            previousVolume.value = volume.value
+            volume.value = 0
+            isMuted.value = true
+            video.play()
+              .then(() => {
+                isPlaying.value = true
+                console.log('MP4静音自动播放成功')
+              })
+              .catch(err2 => console.error('MP4静音也无法自动播放:', err2))
+          }
+        })
+    }, { once: true })
+  }
+}
+
+// HLS降级处理
+function handleHLSFallback(video: HTMLVideoElement, url: string) {
+  console.log('HLS播放失败，尝试降级处理')
+  
+  // 可以尝试找到MP4备用流或显示错误信息
+  errorState.value = true
+  errorMessage.value = '当前浏览器不支持HLS播放，请使用支持的浏览器或更新浏览器版本'
+  
+  // 如果有备用的MP4流，可以尝试切换
+  // video.src = fallbackMp4Url
+  // video.load()
+}
 
 // 处理视频错误的函数
 function handleVideoError(e: Event) {
@@ -466,11 +741,11 @@ function togglePlay() {
               showCenterIcon.value = false
               fadeOutIcon.value = false
               iconTimer = null
-            }, 500) // 淡出动画持续时间
-          }, 800) // 显示持续时间
+            }, 500) 
+          }, 800) 
         })
         .catch(error => {
-          // 视频播放失败（例如自动播放被阻止）
+          // 视频播放失败
           console.error("播放失败:", error)
           // 恢复暂停状态
           isPlaying.value = false
@@ -707,28 +982,6 @@ function changeVolume(event: MouseEvent) {
   updateVolumeFromMousePosition(event)
 }
 
-function reload() {
-  const video = videoRef.value
-  if (!video) return
-
-  // 保存当前播放位置和播放状态
-  const currentPosition = video.currentTime
-  const wasPlaying = !video.paused
-
-  // 重新加载视频
-  video.load()
-
-  // 视频加载后设置到原来的播放位置
-  video.onloadeddata = () => {
-    video.currentTime = currentPosition
-    if (wasPlaying) {
-      video.play()
-      isPlaying.value = true
-    }
-  }
-  resetHideControlsTimer()
-}
-
 function changeLine() {
   const video = videoRef.value
   if (!video) return
@@ -737,25 +990,82 @@ function changeLine() {
   const currentPosition = video.currentTime
   const wasPlaying = !video.paused
 
-  // 直接设置视频元素的 src，而不是修改计算属性
-  video.src = currentLine.value.url
+  // 检测新线路的流类型
+  const newStreamType = detectStreamType(currentLine.value.url)
+  
+  if (newStreamType === 'hls') {
+    // HLS流切换
+    if (hls.value) {
+      hls.value.loadSource(currentLine.value.url)
+    } else {
+      initHLS(video, currentLine.value.url)
+    }
+  } else {
+    // MP4或其他格式切换
+    if (hls.value) {
+      hls.value.destroy()
+      hls.value = null
+    }
+    
+    video.src = currentLine.value.url
+    video.load()
+  }
 
-  // 加载新视频源
-  video.load()
-
-  // 等待视频加载完成后设置播放位置并播放
-  video.onloadeddata = () => {
-    // 设置回之前的播放位置
-    video.currentTime = currentPosition
-
-    // 如果之前是播放状态，则继续播放
-    if (wasPlaying) {
-      video.play()
-        .catch(err => console.error('无法自动播放:', err))
-      isPlaying.value = true
+  // 对于MP4，可以恢复播放位置；对于HLS直播流，通常不需要
+  if (newStreamType === 'mp4' && liveStore.isPlaybackMode) {
+    video.onloadeddata = () => {
+      video.currentTime = currentPosition
+      if (wasPlaying) {
+        video.play().catch(err => console.error('无法自动播放:', err))
+        isPlaying.value = true
+      }
+    }
+  } else if (wasPlaying && newStreamType === 'hls') {
+    // HLS直播流，直接播放
+    video.onloadeddata = () => {
+      if (wasPlaying) {
+        video.play().catch(err => console.error('无法自动播放:', err))
+        isPlaying.value = true
+      }
     }
   }
 
+  resetHideControlsTimer()
+}
+
+// reload支持HLS
+function reload() {
+  const video = videoRef.value
+  if (!video) return
+
+  // 保存当前播放位置和播放状态
+  const currentPosition = video.currentTime
+  const wasPlaying = !video.paused
+
+  if (currentStreamType.value === 'hls' && hls.value) {
+    // HLS重新加载
+    console.log('重新加载HLS流')
+    hls.value.stopLoad()
+    hls.value.loadSource(currentLine.value.url)
+    
+    if (wasPlaying) {
+      video.play().catch(err => console.error('HLS重新播放失败:', err))
+    }
+  } else {
+    // MP4重新加载
+    video.load()
+    
+    video.onloadeddata = () => {
+      if (liveStore.isPlaybackMode) {
+        video.currentTime = currentPosition
+      }
+      if (wasPlaying) {
+        video.play()
+        isPlaying.value = true
+      }
+    }
+  }
+  
   resetHideControlsTimer()
 }
 
@@ -804,6 +1114,7 @@ onMounted(() => {
   if (video) {
     video.addEventListener('stalled', onBuffer) // 网络不佳也可触发
     video.addEventListener('canplay', onPlay)
+
   }
 
   const updateBuffered = () => {
@@ -825,7 +1136,7 @@ onMounted(() => {
   video.addEventListener('timeupdate', updateProgress)
   video.addEventListener('loadedmetadata', updateDuration)
 
-  // 清除监听器（推荐）
+  // 清除监听器
   onUnmounted(() => {
     video.removeEventListener('progress', updateBuffered)
     video.removeEventListener('timeupdate', updateProgress)
@@ -881,6 +1192,13 @@ function resumeHideControlsTimer() {
 
 
 onUnmounted(() => {
+
+  // 销毁HLS实例
+  if (hls.value) {
+    hls.value.destroy()
+    hls.value = null
+  }
+  
   // 移除触摸事件监听
   const videoContainer = document.querySelector('.video-container');
   if (videoContainer) {
