@@ -34,7 +34,7 @@ docker build -f ./xet-operation/frontend/Dockerfile -t xet-frontend-img .
 echo "-------------------------------------"
 echo "4. 构建后端镜像..."
 cd "$PROJECT_DIR/xet-OnlineLivingStream"
-docker build -f ./xet-operation/backend/Dockerfile -t xet-backend-img .
+docker build --network=host -f ./xet-operation/backend/Dockerfile -t xet-backend-img .
 
 echo "5. 启动 docker compose 服务"
 cd "$PROJECT_DIR/xet-OnlineLivingStream"
