@@ -224,13 +224,26 @@ let iconTimer: number | null = null
 
 watchEffect(() => {
   if (liveStore.playback_url) {
-    console.log('直播地址已更新:', liveStore.playback_url)
+    // console.log('视频地址已更新:', liveStore.playback_url)
 
-    // 更新所有线路为相同的直播地址
-    lines.value = [
-      { name: '直播线路1', url: liveStore.playback_url },
-      { name: '直播线路2', url: liveStore.playback_url }
-    ]
+    // 判断是否为回放模式
+    if (liveStore.isPlaybackMode) {
+      console.log('回放模式：加载视频文件')
+      
+      // 回放模式：使用视频文件，更新线路信息
+      lines.value = [
+        { name: `回放视频${liveStore.playbackId}`, url: liveStore.playback_url },
+        { name: `备用线路`, url: liveStore.playback_url }
+      ]
+    } else {
+      console.log('直播模式：加载直播流')
+      
+      // 直播模式：使用直播流
+      lines.value = [
+        { name: '直播线路1', url: liveStore.playback_url },
+        { name: '直播线路2', url: liveStore.playback_url }
+      ]
+    }
 
     // 默认选择第一条线路
     currentLine.value = lines.value[0]
@@ -241,28 +254,34 @@ watchEffect(() => {
       video.src = liveStore.playback_url
       video.load()
 
-      // 无条件自动播放
-      video.play()
-        .then(() => {
-          isPlaying.value = true;
-          console.log('视频开始自动播放');
-        })
-        .catch(err => {
-          // 如果自动播放被浏览器阻止，尝试静音播放
-          if (err.name === 'NotAllowedError') {
-            console.log('尝试静音播放...');
-            video.muted = true;
-            previousVolume.value = volume.value // 保存当前音量
-            volume.value = 0
-            isMuted.value = true;
-            video.play()
-              .then(() => {
-                isPlaying.value = true;  // 添加这一行，确保静音播放时按钮状态也更新
-                console.log('静音自动播放成功');
-              })
-              .catch(err2 => console.error('静音也无法自动播放:', err2));
-          }
-        });
+      // 回放模式和直播模式的播放策略不同
+      if (liveStore.isPlaybackMode) {
+        // 回放模式：不自动播放，等待用户点击
+        // console.log('回放模式：等待用户手动播放')
+        isPlaying.value = false
+      } else {
+        // 直播模式：尝试自动播放
+        video.play()
+          .then(() => {
+            isPlaying.value = true
+            // console.log('直播自动播放成功')
+          })
+          .catch(err => {
+            if (err.name === 'NotAllowedError') {
+              console.log('尝试静音播放...')
+              video.muted = true
+              previousVolume.value = volume.value
+              volume.value = 0
+              isMuted.value = true
+              video.play()
+                .then(() => {
+                  isPlaying.value = true
+                  console.log('静音自动播放成功')
+                })
+                .catch(err2 => console.error('静音也无法自动播放:', err2))
+            }
+          })
+      }
     }
   }
 })

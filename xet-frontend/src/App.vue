@@ -15,6 +15,11 @@
       </button>
     </div>
 
+      <!-- 回放模式指示器 -->
+    <div v-if="liveStore.isPlaybackMode" class="playback-indicator">
+      <span>📹 回放模式 - 视频 {{ liveStore.playbackId }}</span>
+    </div>
+
     <!-- 直播控制按钮 -->
     <LiveControlButton />
 
@@ -30,15 +35,15 @@
       </div>
     </div>
 
-    <!-- 加载中状态 -->
+     <!-- 加载中状态 -->
     <div v-else-if="isLoading" class="loading-container">
-      <p>加载中...</p>
+      <p>{{ isPlaybackMode ? '加载回放内容中...' : '加载直播内容中...' }}</p>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import { useRoute } from 'vue-router'
 import VideoPlayer from './components/VideoPlayer.vue'
 import ChatBox from './components/ChatBox.vue'
@@ -51,6 +56,8 @@ const liveStore = useLiveStore()
 
 const isLoading = ref(true)
 const errorMessage = ref<string>('')
+
+const isPlaybackMode = computed(() => route.name === 'playback')
 
 // 在组件挂载时尝试恢复用户选择
 onMounted(async () => {
@@ -83,24 +90,33 @@ watch(() => route.params.liveId, async (newLiveId) => {
 // 加载直播数据
 async function loadLiveData() {
   const liveId = route.params.liveId as string
+  const playbackId = route.params.playbackId as string // 回放ID（可选）
+  
   if (!liveId || !liveStore.currentUserId) return
 
   isLoading.value = true
 
   try {
-    // 加载直播信息
-    await liveStore.loadLiveInfo(liveId)
+    // 加载直播信息，传入回放ID（如果有）
+    await liveStore.loadLiveInfo(liveId, playbackId)
 
-    // 连接到WebSocket聊天室
-    const connected = await liveStore.connectToChat(liveId, liveStore.currentUserId)
-    if (connected) {
-      console.log('WebSocket聊天室连接成功')
+    // 根据模式决定是否连接WebSocket
+    if (isPlaybackMode.value) {
+      console.log('回放模式：已加载历史消息，可选择连接WebSocket获取实时消息')
+      // 回放模式下可以选择不连接WebSocket，或者连接以获取实时消息
+      // 这里选择不自动连接，用户可以手动选择
     } else {
-      console.log('WebSocket连接失败，将使用HTTP模式')
+      // 直播模式：连接WebSocket
+      const connected = await liveStore.connectToChat(liveId, liveStore.currentUserId)
+      if (connected) {
+        console.log('WebSocket聊天室连接成功')
+      } else {
+        console.log('WebSocket连接失败，将使用HTTP模式')
+      }
     }
   } catch (error) {
-    console.error('加载直播信息失败:', error)
-    showError('加载直播信息失败，请刷新页面重试')
+    console.error('加载数据失败:', error)
+    showError('加载数据失败，请刷新页面重试')
   } finally {
     isLoading.value = false
   }
@@ -137,6 +153,23 @@ onUnmounted(() => {
   position: fixed;
   top: 0;
   left: 0;
+}
+
+/* 回放模式指示器样式 */
+.playback-indicator {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(156, 39, 176, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 1000;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* 添加用户状态指示器样式 */
@@ -252,6 +285,12 @@ onUnmounted(() => {
     /* 100vw * 9/16 = 56.25vw */
     max-height: 50vh;
     /* 最大不超过视窗高度的50% */
+  }
+
+  .playback-indicator {
+    top: 10px;
+    font-size: 12px;
+    padding: 6px 12px;
   }
 
   .chat {

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播间导航页</title>
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #bea5df;
+            --card-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .enter-room-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            margin-left: auto;
+        }
+
+        .enter-room-btn:hover {
+            background-color: #3c7ec1;
+        }
+
+        /* 展开按钮样式 */
+        .expand-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            padding: 0 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 回放条目中的观看按钮 */
+
+        .watch-playback-btn:hover {
+            background-color: #3c7ec1;
+        }
+
+        .playback-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .watch-playback-btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .room-card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin: 15px 0;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            cursor: pointer;
+        }
+
+        .room-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .room-title {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .room-time {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-top: 5px;
+        }
+
+        .arrow {
+            transition: transform 0.3s ease;
+        }
+
+        .room-body {
+            display: none;
+            background: white;
+            padding: 10px 20px;
+        }
+
+        .room-body.active {
+            display: block;
+        }
+
+        .playback-list {
+            list-style: none;
+            padding-left: 0;
+            margin: 10px 0 15px;
+        }
+
+        .playback-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .playback-item:last-child {
+            border-bottom: none;
+        }
+
+        .playback-name {
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .playback-time {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .expand-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0 10px 0 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 style="text-align:center; color:#333; margin-bottom:30px;">演示：直播间导航页</h1>
+
+        <!-- 直播间示例1 -->
+        <div class="room-card">
+            <div class="room-header" onclick="togglePlayback(this)">
+                <div class="room-info">
+                    <span class="room-title">动物世界直播间</span>
+                    <span class="room-time">直播时间：2025-04-15 20:00</span>
+                </div>
+                <button class="enter-room-btn" onclick="event.stopPropagation(); window.location.href='https://lcmonitor.dynv6.net/live/1'">进入直播间</button>
+                <button class="expand-btn" aria-label="展开回放列表"
+                    onclick="event.stopPropagation(); togglePlayback(this.parentElement)">
+                    回放列表 ▶
+                </button>
+            </div>
+            <div class="room-body">
+                <ul class="playback-list">
+                    <li class="playback-item">
+                        <div class="playback-content">
+                            <div>
+                                <a href="#" class="playback-name">动物观察</a>
+                                <span class="playback-time">2025-04-15 20:00</span>
+                            </div>
+                            <button class="watch-playback-btn"
+                                onclick="event.stopPropagation(); window.location.href='https://lcmonitor.dynv6.net/live/1/playback/1'">观看回放</button>
+                        </div>
+                    </li>
+                    <li class="playback-item">
+                        <div class="playback-content">
+                            <div>
+                                <a href="#" class="playback-name">青青世界</a>
+                                <span class="playback-time">2025-04-02 16:00</span>
+                            </div>
+                            <button class="watch-playback-btn"
+                                onclick="event.stopPropagation(); window.location.href='https://lcmonitor.dynv6.net/live/1/playback/2'">观看回放</button>
+                        </div>
+                    </li>
+                    <!-- 更多回放条目 -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- 直播间示例2 -->
+        <div class="room-card">
+            <div class="room-header" onclick="togglePlayback(this)">
+                <div class="room-info">
+                    <span class="room-title">科技前沿直播间</span>
+                    <span class="room-time">直播时间：2025-01-27 20:00</span>
+                </div>
+                <button class="enter-room-btn" onclick="event.stopPropagation(); window.location.href='https://lcmonitor.dynv6.net/live/2'">进入直播间</button>
+                <button class="expand-btn" aria-label="展开回放列表"
+                    onclick="event.stopPropagation(); togglePlayback(this.parentElement)">
+                    回放列表 ▶
+                </button>
+            </div>
+            <div class="room-body">
+                <ul class="playback-list">
+                    <li class="playback-item">
+                        <div class="playback-content">
+                            <div>
+                                <a href="#" class="playback-name">科技趋势分析</a>
+                                <span class="playback-time">2025-01-27 20:00</span>
+                            </div>
+                            <button class="watch-playback-btn"
+                                onclick="event.stopPropagation(); alert('暂时没有添加视频噢')">观看回放</button>
+                        </div>
+                    </li>
+                    <!-- 更多回放条目 -->
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function togglePlayback(header) {
+            const card = header.parentElement;
+            const body = card.querySelector('.room-body');
+            const expandBtn = header.querySelector('.expand-btn');
+
+            // 切换当前直播间
+            body.classList.toggle('active');
+            expandBtn.textContent = body.classList.contains('active') ? '回放列表 ▼' : '回放列表 ▶';
+        }
+    </script>
+</body>
+
+</html>
