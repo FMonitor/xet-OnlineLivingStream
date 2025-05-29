@@ -29,7 +29,8 @@ jobs:
           cd /home/admin
           cd xet-OnlineLivingStream
           git switch dev2 
-          git pull origin dev2
+          git pull
           cd ..
           /home/admin/xet-OnlineLivingStream/local-deploy.sh
           EOF
+          

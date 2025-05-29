@@ -5,7 +5,7 @@
 #include <mysqlx/xdevapi.h>
 #include "oatpp/core/macro/codegen.hpp"
 #include <iostream>
-
+#include "../LivingstreamComponent.hpp"
 #include "../MySQLComponent.hpp"
 extern mysqlx::Client cli;
 
@@ -38,8 +38,14 @@ public:
 
     auto userdto = UserDto::createShared();
     userdto->id = row[0].get<int64_t>();
-    userdto->name = row[1].get<std::string>();
-    userdto->avatar_url = row[2].get<std::string>();
+    if (!row[1].isNull())
+      userdto->name = row[1].get<std::string>();
+    else
+      userdto->name = "";
+    if (!row[2].isNull())
+      userdto->avatar_url = row[2].get<std::string>();
+    else
+      userdto->avatar_url = "";
     result_dto->data->push_back(userdto);
 
     return result_dto;
@@ -86,9 +92,18 @@ public:
       auto livedto = LiveDto::createShared();
       livedto->living_stream_id = live_row[0].get<int64_t>();
       livedto->creator_user_id = live_row[1].get<int64_t>();
-      livedto->description = live_row[2].get<std::string>();
-      livedto->living_cover_url = live_row[3].get<std::string>();
-      livedto->living_title = live_row[4].get<std::string>();
+      if (!live_row[2].isNull())
+        livedto->description = live_row[2].get<std::string>();
+      else
+        livedto->description = "";
+      if (!live_row[3].isNull())
+        livedto->living_cover_url = live_row[3].get<std::string>();
+      else
+        livedto->living_cover_url = "";
+      if (!live_row[4].isNull())
+        livedto->living_title = live_row[4].get<std::string>();
+      else
+        livedto->living_title = "";
       // 查询该直播的所有回放
       livedto->playbacks = oatpp::List<oatpp::Object<LivePlaybackDto>>::createShared();
       auto result_playbacks = DBSession.sql(
@@ -101,9 +116,18 @@ public:
       {
         auto playbackdto = LivePlaybackDto::createShared();
         playbackdto->playback_id = playback_row[0].get<int64_t>();
-        playbackdto->playback_title = playback_row[1].get<std::string>();
-        playbackdto->created_at = playback_row[2].get<std::string>();
-        playbackdto->playback_url = playback_row[3].get<std::string>();
+        if (!playback_row[1].isNull())
+          playbackdto->playback_title = playback_row[1].get<std::string>();
+        else
+          playbackdto->playback_title = "";
+        if (!playback_row[2].isNull())
+          playbackdto->created_at = playback_row[2].get<std::string>();
+        else
+          playbackdto->created_at = "";
+        if (!playback_row[3].isNull())
+          playbackdto->playback_url = playback_row[3].get<std::string>();
+        else
+          playbackdto->playback_url = "";
         livedto->playbacks->push_back(playbackdto);
       }
 
@@ -133,7 +157,7 @@ public:
     DBSession.sql("USE xet_living_table").execute();
 
     // 查询直播信息
-    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url FROM living_stream WHERE living_stream_id = ?")
+    auto result_live_db = DBSession.sql("SELECT living_stream_id,creator_user_id,description,living_stream_url,living_comment_room_url,living_expla_room_url,living_broadcast_room_url,isliving,living_url,living_stream_code FROM living_stream WHERE living_stream_id = ?")
                               .bind((int64_t)id)
                               .execute();
 
@@ -151,11 +175,35 @@ public:
 
     livedto->living_stream_id = live_row[0].get<int64_t>();
     livedto->creator_user_id = live_row[1].get<int64_t>();
-    livedto->description = live_row[2].get<std::string>();
-    livedto->living_stream_url = live_row[3].get<std::string>();
-    livedto->living_comment_room_url = live_row[4].get<std::string>();
-    livedto->living_expla_room_url = live_row[5].get<std::string>();
-    livedto->living_broadcast_room_url = live_row[6].get<std::string>();
+    if (!live_row[2].isNull())
+      livedto->description = live_row[2].get<std::string>();
+    else
+      livedto->description = "";
+    if (!live_row[3].isNull())
+      livedto->living_stream_url = live_row[3].get<std::string>();
+    else
+      livedto->living_stream_url = "";
+    if (!live_row[4].isNull())
+      livedto->living_comment_room_url = live_row[4].get<std::string>();
+    else
+      livedto->living_comment_room_url = "";
+    if (!live_row[5].isNull())
+      livedto->living_expla_room_url = live_row[5].get<std::string>();
+    else
+      livedto->living_expla_room_url = "";
+    if (!live_row[6].isNull())
+      livedto->living_broadcast_room_url = live_row[6].get<std::string>();
+    else
+      livedto->living_broadcast_room_url = "";
+    livedto->isliving = live_row[7].get<bool>();
+    if (!live_row[8].isNull())
+      livedto->living_url = live_row[8].get<std::string>();
+    else
+      livedto->living_url = "";
+    if (!live_row[9].isNull())
+      livedto->living_stream_code = live_row[9].get<std::string>();
+    else
+      livedto->living_stream_code = "";
     // 查询评论总数并分页
     auto total_comments_result = DBSession.sql("SELECT COUNT(*) FROM live_comment WHERE living_stream_id = ?").bind((int64_t)id).execute();
     auto total_comments_count = total_comments_result.fetchOne()[0].get<int64_t>();
@@ -170,8 +218,14 @@ public:
       comment->comment_id = live_comments_row[0].get<int64_t>();
       comment->living_stream_id = live_comments_row[1].get<int64_t>();
       comment->creator_user_id = live_comments_row[2].get<int64_t>();
-      comment->created_at = live_comments_row[3].get<std::string>();
-      comment->content = live_comments_row[4].get<std::string>();
+      if (!live_comments_row[3].isNull())
+        comment->created_at = live_comments_row[3].get<std::string>();
+      else
+        comment->created_at = "";
+      if (!live_comments_row[4].isNull())
+        comment->content = live_comments_row[4].get<std::string>();
+      else
+        comment->content = "";
       livedto->comments->push_back(comment);
     }
 
@@ -189,8 +243,14 @@ public:
       explanation->expla_id = explanation_row[0].get<int64_t>();
       explanation->living_stream_id = explanation_row[1].get<int64_t>();
       explanation->creator_user_id = explanation_row[2].get<int64_t>();
-      explanation->created_at = explanation_row[3].get<std::string>();
-      explanation->content = explanation_row[4].get<std::string>();
+      if (!explanation_row[3].isNull())
+        explanation->created_at = explanation_row[3].get<std::string>();
+      else
+        explanation->created_at = "";
+      if (!explanation_row[4].isNull())
+        explanation->content = explanation_row[4].get<std::string>();
+      else
+        explanation->content = "";
       livedto->explanations->push_back(explanation);
     }
 
@@ -208,8 +268,14 @@ public:
       file->file_id = file_row[0].get<int64_t>();
       file->living_stream_id = file_row[1].get<int64_t>();
       file->creator_user_id = file_row[2].get<int64_t>();
-      file->created_at = file_row[3].get<std::string>();
-      file->file_url = file_row[4].get<std::string>();
+      if (!file_row[3].isNull())
+        file->created_at = file_row[3].get<std::string>();
+      else
+        file->created_at = "";
+      if (!file_row[4].isNull())
+        file->file_url = file_row[4].get<std::string>();
+      else
+        file->file_url = "";
       livedto->files->push_back(file);
     }
 
@@ -240,9 +306,18 @@ public:
 
     auto playbackdto = LivePlaybackDto::createShared();
     playbackdto->playback_id = row[0].get<int64_t>();
-    playbackdto->playback_title = row[1].get<std::string>();
-    playbackdto->created_at = row[2].get<std::string>();
-    playbackdto->playback_url = row[3].get<std::string>();
+    if (!row[1].isNull())
+      playbackdto->playback_title = row[1].get<std::string>();
+    else
+      playbackdto->playback_title = "";
+    if (!row[2].isNull())
+      playbackdto->created_at = row[2].get<std::string>();
+    else
+      playbackdto->created_at = "";
+    if (!row[3].isNull())
+      playbackdto->playback_url = row[3].get<std::string>();
+    else
+      playbackdto->playback_url = "";
     result_dto->data->push_back(playbackdto);
 
     return result_dto;
@@ -288,8 +363,14 @@ public:
       comment->comment_id = live_comments_row[0].get<int64_t>();
       comment->living_stream_id = live_comments_row[1].get<int64_t>();
       comment->creator_user_id = live_comments_row[2].get<int64_t>();
-      comment->created_at = live_comments_row[3].get<std::string>();
-      comment->content = live_comments_row[4].get<std::string>();
+      if (!live_comments_row[3].isNull())
+        comment->created_at = live_comments_row[3].get<std::string>();
+      else
+        comment->created_at = "";
+      if (!live_comments_row[4].isNull())
+        comment->content = live_comments_row[4].get<std::string>();
+      else
+        comment->content = "";
       result_dto->data->push_back(comment);
     }
 
@@ -297,6 +378,7 @@ public:
     result_dto->message = "Comments retrieved successfully.";
     return result_dto;
   }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveExplaDto> getLiveExpla(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
@@ -337,15 +419,21 @@ public:
       explanation->expla_id = explanation_row[0].get<int64_t>();
       explanation->living_stream_id = explanation_row[1].get<int64_t>();
       explanation->creator_user_id = explanation_row[2].get<int64_t>();
-      explanation->created_at = explanation_row[3].get<std::string>();
-      explanation->content = explanation_row[4].get<std::string>();
+      if (!explanation_row[3].isNull())
+        explanation->created_at = explanation_row[3].get<std::string>();
+      else
+        explanation->created_at = "";
+      if (!explanation_row[4].isNull())
+        explanation->content = explanation_row[4].get<std::string>();
+      else
+        explanation->content = "";
       result_dto->data->push_back(explanation);
     }
-
     result_dto->statusCode = 200;
     result_dto->message = "Explanations retrieved successfully.";
     return result_dto;
   }
+
   // 第一个参数是直播id,第二个参数是页面大小,第三个是面数
   oatpp::Object<RLiveFileDto> getLiveFile(const oatpp::Int64 &id, const int64_t pagesize, int64_t page)
   {
@@ -386,8 +474,14 @@ public:
       file->file_id = file_row[0].get<int64_t>();
       file->living_stream_id = file_row[1].get<int64_t>();
       file->creator_user_id = file_row[2].get<int64_t>();
-      file->created_at = file_row[3].get<std::string>();
-      file->file_url = file_row[4].get<std::string>();
+      if (!file_row[3].isNull())
+        file->created_at = file_row[3].get<std::string>();
+      else
+        file->created_at = "";
+      if (!file_row[4].isNull())
+        file->file_url = file_row[4].get<std::string>();
+      else
+        file->file_url = "";
       result_dto->data->push_back(file);
     }
 
@@ -489,6 +583,90 @@ public:
       result_dto->message = std::string("Failed to insert file: ") + e.what();
     }
 
+    return result_dto;
+  }
+
+  oatpp::Object<RStartLivingDto> startLivingById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = RStartLivingDto::createShared();
+    result_dto->data = oatpp::List<oatpp::Object<StartLivingDto>>::createShared();
+
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 构造playback_title
+    auto now = std::chrono::system_clock::now();
+    std::time_t now_time = std::chrono::system_clock::to_time_t(now);
+    std::tm tm_now;
+#if defined(_WIN32) || defined(_WIN64)
+    localtime_s(&tm_now, &now_time);
+#else
+    localtime_r(&now_time, &tm_now);
+#endif
+    char time_buf[32];
+    std::strftime(time_buf, sizeof(time_buf), "%Y%m%d%H%M%S", &tm_now);
+    std::string playback_title = "living_" + std::to_string(id) + time_buf;
+
+    // 插入live_playback表
+    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title) VALUES (?, ?)")
+        .bind((int64_t)id)
+        .bind(playback_title)
+        .execute();
+
+    // 获取刚插入的playback_id
+    auto result = DBSession.sql("SELECT LAST_INSERT_ID()").execute();
+    int64_t playback_id = result.fetchOne()[0].get<int64_t>();
+
+    // 构造living_stream_url, living_stream_code, living_url
+    std::string living_stream_url = RTMP_URL;
+    std::string living_stream_code = std::to_string(id);
+    std::string living_url = FILE_URL + std::to_string(playback_id) + "/playback" + std::to_string(playback_id) + ".m3u8";
+
+    // 更新living_stream表
+    DBSession.sql("UPDATE living_stream SET living_stream_url = ?, living_stream_code = ?, living_url = ? WHERE living_stream_id = ?")
+        .bind(living_stream_url)
+        .bind(living_stream_code)
+        .bind(living_url)
+        .bind((int64_t)id)
+        .execute();
+
+    // 更新回放的回放地址
+    DBSession.sql("UPDATE live_playback SET playback_url = ? WHERE playback_id = ?")
+        .bind(living_url)
+        .bind(playback_id)
+        .execute();
+
+    start_ffmpeg(id, playback_id);
+
+    // 构造返回DTO
+    auto dto = StartLivingDto::createShared();
+    dto->playback_id = playback_id;
+    dto->living_stream_url = living_stream_url;
+    dto->living_stream_code = living_stream_code;
+    dto->living_url = living_url;
+    result_dto->data->push_back(dto);
+
+    result_dto->statusCode = 200;
+    result_dto->message = "Start living success";
+    return result_dto;
+  }
+
+  oatpp::Object<MessageDto> endLivingById(const oatpp::Int64 &id)
+  {
+    auto DBSession = cli.getSession();
+    auto result_dto = MessageDto::createShared();
+
+    DBSession.sql("USE xet_living_table").execute();
+
+    // 清空对应字段
+    DBSession.sql("UPDATE living_stream SET living_url = '' WHERE living_stream_id = ?")
+        .bind((int64_t)id)
+        .execute();
+
+    end_ffmpeg(id);
+
+    result_dto->statusCode = 200;
+    result_dto->message = "End living success";
     return result_dto;
   }
 };

@@ -1,7 +1,13 @@
-FROM aldebaran638/ubuntu_24.04:git-cmake-oatpp_1.3.1-MySQL_9.3.0_cpp
+FROM aldebaran638/ubuntu_24.04:git-cmake-oatpp_1.3.1-MySQL_9.3.0_cpp-ffmpeg-nginx_rtmp
 WORKDIR /app
 
 COPY ./xet-backend .
+
+RUN echo "启动后端nginx-rtmp服务器"
+WORKDIR /usr/local/nginx
+RUN pwd
+RUN ls
+RUN ./sbin/nginx
 
 RUN echo "启动后端异步服务器"
 WORKDIR /app/xet-backend-async

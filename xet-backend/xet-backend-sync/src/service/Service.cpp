@@ -46,3 +46,11 @@ oatpp::Object<MessageDto> Service::instertLiveFile(oatpp::Object<LiveFileDto> fi
 {
   return dao.instertLiveFile(file);
 }
+oatpp::Object<RStartLivingDto> Service::startLiving(const oatpp::Int64 &id)
+{
+  return dao.startLivingById(id);
+}
+oatpp::Object<MessageDto> Service::endLiving(const oatpp::Int64 &id)
+{
+  return dao.endLivingById(id);
+}
