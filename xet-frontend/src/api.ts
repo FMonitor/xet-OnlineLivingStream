@@ -166,6 +166,38 @@ export const liveAPI = {
         }
     },
 
+    // 开始直播
+    startLive: async (liveId: number | string): Promise<ApiResponse<any>> => {
+        try {
+            const response = await apiClient.post(`/home/live/${liveId}/start`);
+            
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '开始直播失败');
+            }
+            
+            return response.data;
+        } catch (error) {
+            // console.error('开始直播失败:', error);
+            throw error;
+        }
+    },
+
+    // 结束直播
+    endLive: async (liveId: number | string): Promise<ApiResponse<any>> => {
+        try {
+            const response = await apiClient.post(`/home/live/${liveId}/end`);
+            
+            if (response.data.statusCode !== 200) {
+                throw new Error(response.data.message || '结束直播失败');
+            }
+            
+            return response.data;
+        } catch (error) {
+            // console.error('结束直播失败:', error);
+            throw error;
+        }
+    },
+
     // 分页获取评论 - 更新响应处理
     fetchCommentsByPage: async (liveId: number | string, page: number): Promise<ApiResponse<Comment>> => {
         try {

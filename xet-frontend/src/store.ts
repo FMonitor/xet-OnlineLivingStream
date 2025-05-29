@@ -66,6 +66,104 @@ export const useLiveStore = defineStore('live', () => {
     const explanationPage = ref(1);
     const filePage = ref(1);
 
+    // 添加直播控制状态
+    const isStreaming = ref<boolean>(false);
+    const isStreamingLoading = ref<boolean>(false);
+
+    // 添加主播判断的计算属性
+    const isStreamer = computed(() => currentUserId.value === 1);
+
+    // 开始直播
+    async function startStreaming(): Promise<boolean> {
+        if (!currentLiveId.value || !isStreamer.value) {
+            console.warn('无权限开始直播或直播间ID缺失');
+            return false;
+        }
+
+        isStreamingLoading.value = true;
+        
+        try {
+            const response = await liveAPI.startLive(currentLiveId.value);
+            
+            if (response.statusCode === 200 && response.data && response.data.length > 0) {
+                const streamData = response.data[0];
+                
+                // 更新播放URL
+                if (streamData.living_url) {
+                    playback_url.value = streamData.living_url;
+                    console.log('直播开始，播放地址:', streamData.living_url);
+                }
+                
+                // 更新直播状态
+                isStreaming.value = true;
+                isLiving.value = true;
+                
+                // 更新liveInfo中的直播URL（如果需要）
+                if (liveInfo.value) {
+                    liveInfo.value.living_stream_url = streamData.living_url || streamData.living_stream_url;
+                }
+                
+                console.log('直播开始成功:', {
+                    playback_id: streamData.playback_id,
+                    living_stream_url: streamData.living_stream_url,
+                    living_stream_code: streamData.living_stream_code,
+                    living_url: streamData.living_url
+                });
+                
+                return true;
+            } else {
+                throw new Error('开始直播响应数据格式错误');
+            }
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : '开始直播失败';
+            error.value = errorMsg;
+            console.error('开始直播失败:', e);
+            return false;
+        } finally {
+            isStreamingLoading.value = false;
+        }
+    }
+
+    // 结束直播
+    async function endStreaming(): Promise<boolean> {
+        if (!currentLiveId.value || !isStreamer.value) {
+            console.warn('无权限结束直播或直播间ID缺失');
+            return false;
+        }
+
+        isStreamingLoading.value = true;
+        
+        try {
+            const response = await liveAPI.endLive(currentLiveId.value);
+            
+            if (response.statusCode === 200) {
+                // 更新直播状态
+                isStreaming.value = false;
+                isLiving.value = false;
+                
+                // 清除播放URL
+                // playback_url.value = null;
+                
+                // 更新liveInfo中的直播URL
+                if (liveInfo.value) {
+                    liveInfo.value.living_stream_url = "0";
+                }
+                
+                console.log('直播结束成功');
+                return true;
+            } else {
+                throw new Error('结束直播响应状态码错误');
+            }
+        } catch (e) {
+            const errorMsg = e instanceof Error ? e.message : '结束直播失败';
+            error.value = errorMsg;
+            console.error('结束直播失败:', e);
+            return false;
+        } finally {
+            isStreamingLoading.value = false;
+        }
+    }
+
     // === 用户管理方法 ===
     function setCurrentUserId(userId: number) {
         currentUserId.value = userId;
@@ -115,7 +213,7 @@ export const useLiveStore = defineStore('live', () => {
     }
 
     function transformExplanation(explanation: Explanation): Explanation {
-        console.log('转换讲解数据:', explanation);
+        // console.log('转换讲解数据:', explanation);
 
         // 不要覆盖已有的正确数据
         const transformedExplanation = {
@@ -127,12 +225,12 @@ export const useLiveStore = defineStore('live', () => {
             living_stream_id: explanation.living_stream_id || currentLiveId.value || 0
         };
 
-        console.log('转换后的讲解数据:', transformedExplanation);
+        // console.log('转换后的讲解数据:', transformedExplanation);
         return transformedExplanation;
     }
 
     function transformFile(file: File): File {
-        console.log('转换文件数据:', file);
+        // console.log('转换文件数据:', file);
 
         const transformedFile = {
             ...file,
@@ -140,7 +238,7 @@ export const useLiveStore = defineStore('live', () => {
             living_stream_id: file.living_stream_id || currentLiveId.value || 0
         };
 
-        console.log('转换后的文件数据:', transformedFile);
+        // console.log('转换后的文件数据:', transformedFile);
         return transformedFile;
     }
 
@@ -170,6 +268,7 @@ export const useLiveStore = defineStore('live', () => {
             liveTitle.value = liveInfo.value.description || `直播间 ${liveId}`;
             liveCoverUrl.value = ''; // 实际响应中没有封面URL
             isLiving.value = liveInfo.value.living_stream_url !== "0";
+            isStreaming.value = isLiving.value && isStreamer.value;
             commentRoomUrl.value = liveInfo.value.living_comment_room_url;
             explanationRoomUrl.value = liveInfo.value.living_expla_room_url;
             broadcastRoomUrl.value = liveInfo.value.living_broadcast_room_url;
@@ -182,29 +281,29 @@ export const useLiveStore = defineStore('live', () => {
             // 初始化数据 - 使用正确的字段名
             if (liveInfo.value.comments && Array.isArray(liveInfo.value.comments)) {
                 comments.length = 0;
-                console.log('加载评论数据:', liveInfo.value.comments.length, '条');
+                // console.log('加载评论数据:', liveInfo.value.comments.length, '条');
                 const transformedComments = liveInfo.value.comments.map(transformComment);
                 comments.push(...transformedComments);
             }
 
             if (liveInfo.value.explanations && Array.isArray(liveInfo.value.explanations)) {
                 explanations.length = 0;
-                console.log('加载讲解数据:', liveInfo.value.explanations.length, '条');
+                // console.log('加载讲解数据:', liveInfo.value.explanations.length, '条');
                 const transformedExplanations = liveInfo.value.explanations.map(transformExplanation);
                 explanations.push(...transformedExplanations);
             }
 
             if (liveInfo.value.files && Array.isArray(liveInfo.value.files)) {
                 files.length = 0;
-                console.log('加载文件数据:', liveInfo.value.files.length, '条');
+                // console.log('加载文件数据:', liveInfo.value.files.length, '条');
                 const transformedFiles = liveInfo.value.files.map(transformFile);
                 files.push(...transformedFiles);
             }
 
             // 使用实际的页数信息
-            commentPage.value = liveInfo.value.page_count_comment || 0;
-            explanationPage.value = liveInfo.value.page_count_explanation || 0;
-            filePage.value = liveInfo.value.page_count_file || 0;
+            commentPage.value = liveInfo.value.page_count_comment-1 || 0;
+            explanationPage.value = liveInfo.value.page_count_explanation-1 || 0;
+            filePage.value = liveInfo.value.page_count_file-1 || 0;
 
             console.log('数据加载完成 - 评论:', comments.length, '讲解:', explanations.length, '文件:', files.length);
 
@@ -218,18 +317,18 @@ export const useLiveStore = defineStore('live', () => {
 
     // 连接到直播间聊天室
     async function connectToChat(liveId: string | number, userId: number) {
-        console.log('=== 连接WebSocket聊天室 ===');
-        console.log('直播ID:', liveId);
-        console.log('用户ID:', userId);
-        console.log('聊天室URLs:', {
-            comment: commentRoomUrl.value,
-            explanation: explanationRoomUrl.value,
-            broadcast: broadcastRoomUrl.value
-        });
+        // console.log('=== 连接WebSocket聊天室 ===');
+        // console.log('直播ID:', liveId);
+        // console.log('用户ID:', userId);
+        // console.log('聊天室URLs:', {
+        //     comment: commentRoomUrl.value,
+        //     explanation: explanationRoomUrl.value,
+        //     broadcast: broadcastRoomUrl.value
+        // });
 
         try {
             await wsManager.connect(liveId, userId);
-            console.log('WebSocket聊天室连接成功');
+            // console.log('WebSocket聊天室连接成功');
             return true;
         } catch (error) {
             console.error('WebSocket聊天室连接失败:', error);
@@ -389,6 +488,13 @@ export const useLiveStore = defineStore('live', () => {
         setCurrentUserId,
         restoreUserFromStorage,
         resetUserSelection,
+
+        // 直播控制相关
+        isStreaming,
+        isStreamingLoading,
+        isStreamer,
+        startStreaming,
+        endStreaming,
 
         // 直播相关状态
         currentLiveId,
