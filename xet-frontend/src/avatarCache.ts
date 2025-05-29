@@ -27,7 +27,7 @@ export async function getAvatarAsync(userId: number): Promise<string> {
     
     return new Promise((resolve) => {
       img.onload = () => {
-        console.log(`用户 ${userId} 的头像加载成功:`, avatarUrl);
+        // console.log(`用户 ${userId} 的头像加载成功:`, avatarUrl);
         avatarCache.set(userId, avatarUrl);
         
         // 触发响应式更新
@@ -37,7 +37,7 @@ export async function getAvatarAsync(userId: number): Promise<string> {
       };
       
       img.onerror = (error) => {
-        console.error(`用户 ${userId} 的头像加载失败:`, avatarUrl, error);
+        // console.error(`用户 ${userId} 的头像加载失败:`, avatarUrl, error);
         avatarCache.set(userId, defaultAvatar);
         
         // 触发响应式更新
@@ -49,7 +49,7 @@ export async function getAvatarAsync(userId: number): Promise<string> {
       // 添加超时处理
       setTimeout(() => {
         if (!avatarCache.has(userId)) {
-          console.warn(`用户 ${userId} 的头像加载超时，使用默认头像`);
+          // console.warn(`用户 ${userId} 的头像加载超时，使用默认头像`);
           avatarCache.set(userId, defaultAvatar);
           avatarUpdateTrigger.value++;
           resolve(defaultAvatar);
@@ -57,7 +57,7 @@ export async function getAvatarAsync(userId: number): Promise<string> {
       }, 5000); // 5秒超时
     });
   } catch (error) {
-    console.error(`获取用户 ${userId} 头像时发生错误:`, error);
+    // console.error(`获取用户 ${userId} 头像时发生错误:`, error);
     avatarCache.set(userId, defaultAvatar);
     avatarUpdateTrigger.value++;
     return defaultAvatar;

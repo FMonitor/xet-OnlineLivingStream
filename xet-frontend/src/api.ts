@@ -20,9 +20,9 @@ apiClient.interceptors.request.use(
         }
 
         // 记录请求信息（开发环境）
-        if (import.meta.env.DEV) {
-            console.log(`API 请求: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`)
-        }
+        // if (import.meta.env.DEV) {
+        //     console.log(`API 请求: ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`)
+        // }
 
         return config
     },
@@ -343,7 +343,7 @@ export const userAPI = {
             // 这里假设后端提供了获取头像的统一路径
             return `${apiClient.defaults.baseURL}/file/avatar/${userId}.svg`;
         } catch (error) {
-            console.error('获取用户头像失败:', error);
+            // console.error('获取用户头像失败:', error);
             // 发生错误时返回默认头像URL
             return `${apiClient.defaults.baseURL}/file/avatar/default.svg`;
         }
