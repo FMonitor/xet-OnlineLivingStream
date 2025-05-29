@@ -159,16 +159,17 @@ INSERT INTO live_comment (living_stream_id, creator_user_id, content) VALUES
 (1, 3, 'comment30');
 -- 为每个直播添加讲解信息
 INSERT INTO live_explanation (living_stream_id, creator_user_id, content) VALUES 
-(1, 2, 'explanation1'),
-(1, 3, 'explanation2'),
+(1, 1, 'explanation1'),
+(1, 1, 'explanation2'),
 (1, 1, 'explanation3'),
-(1, 2, 'explanation4'),
-(1, 3, 'explanation5'),
+(1, 1, 'explanation4'),
+(1, 1, 'explanation5'),
 (1, 1, 'explanation6'),
-(1, 2, 'explanation7'),
-(1, 3, 'explanation8'),
+(1, 1, 'explanation7'),
+(1, 1, '😄 Only host can send messages here 😄'),
+(1, 1, 'explanation8'),
 (1, 1, 'explanation9'),
-(1, 2, 'explanation10');
+(1, 1, 'explanation10');
 
 INSERT INTO live_playback (living_stream_id, playback_title, playback_url) VALUES
 (1, '直播1的回放1', 'https://lcmonitor.dynv6.net/file/playback1.m3u8'),
