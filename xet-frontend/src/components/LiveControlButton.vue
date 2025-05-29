@@ -1,6 +1,6 @@
 <!-- src/components/LiveControlButton.vue -->
 <template>
-    <div <div v-if="liveStore.isStreamer && !liveStore.isPlaybackMode" class="live-control-button"
+    <div v-if="liveStore.isStreamer && !liveStore.isPlaybackMode" class="live-control-button"
         :class="{ 'streaming': liveStore.isStreaming, 'loading': liveStore.isStreamingLoading }">
         <button class="control-btn" :disabled="liveStore.isStreamingLoading" @click="toggleStreaming">
             <!-- 加载状态 -->
