@@ -1,10 +1,9 @@
-
 <!-- src/App.vue -->
 <template>
   <div id="app">
     <!-- 用户选择弹窗 -->
     <UserSelector />
-    
+
     <!-- 用户状态指示器 -->
     <div v-if="liveStore.currentUser" class="current-user-indicator">
       <div class="user-badge" :style="{ backgroundColor: liveStore.currentUser.color }">
@@ -15,24 +14,22 @@
         🔄
       </button>
     </div>
-    
+
+    <!-- 直播控制按钮 -->
+    <LiveControlButton />
+
     <!-- 主要内容 -->
     <div class="container" v-if="!isLoading && liveStore.userSelected">
       <VideoPlayer class="video" :playback-url="liveStore.playback_url" />
-      <ChatBox 
-        class="chat" 
-        :comments="liveStore.comments" 
-        :explanations="liveStore.explanations" 
-        :files="liveStore.files"
-        :current-user-id="liveStore.currentUserId ?? 0"
-        @send-error="showError" />
-      
+      <ChatBox class="chat" :comments="liveStore.comments" :explanations="liveStore.explanations"
+        :files="liveStore.files" :current-user-id="liveStore.currentUserId ?? 0" @send-error="showError" />
+
       <!-- 错误提示 -->
       <div v-if="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
     </div>
-    
+
     <!-- 加载中状态 -->
     <div v-else-if="isLoading" class="loading-container">
       <p>加载中...</p>
@@ -46,6 +43,7 @@ import { useRoute } from 'vue-router'
 import VideoPlayer from './components/VideoPlayer.vue'
 import ChatBox from './components/ChatBox.vue'
 import UserSelector from './components/UserSelector.vue'
+import LiveControlButton from './components/LiveControlButton.vue'
 import { useLiveStore } from './store'
 
 const route = useRoute()
@@ -58,7 +56,7 @@ const errorMessage = ref<string>('')
 onMounted(async () => {
   // 先尝试从缓存恢复用户选择
   const restored = liveStore.restoreUserFromStorage()
-  
+
   if (restored) {
     // 如果恢复成功，加载直播信息
     await loadLiveData()
@@ -86,13 +84,13 @@ watch(() => route.params.liveId, async (newLiveId) => {
 async function loadLiveData() {
   const liveId = route.params.liveId as string
   if (!liveId || !liveStore.currentUserId) return
-  
+
   isLoading.value = true
-  
+
   try {
     // 加载直播信息
     await liveStore.loadLiveInfo(liveId)
-    
+
     // 连接到WebSocket聊天室
     const connected = await liveStore.connectToChat(liveId, liveStore.currentUserId)
     if (connected) {
@@ -148,7 +146,7 @@ onUnmounted(() => {
   right: 20px;
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(73, 78, 94, 0.95);
   padding: 8px 16px;
   border-radius: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -266,6 +264,13 @@ onUnmounted(() => {
     min-height: 0;
     /* 允许收缩 */
   }
+
+  .current-user-indicator {
+    top: 10px;
+    right: 10px;
+    font-size: 12px;
+    padding: 6px 12px;
+  }
 }
 
 /* 针对更小屏幕的优化 */
@@ -274,6 +279,19 @@ onUnmounted(() => {
     height: 56.25vw;
     max-height: 40vh;
     /* 小屏幕上视频占比稍小 */
+  }
+
+  .current-user-indicator {
+    top: 10px;
+    right: 10px;
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .user-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
   }
 }
 
