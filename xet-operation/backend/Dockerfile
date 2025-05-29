@@ -5,8 +5,10 @@ COPY ./xet-backend .
 
 RUN echo "启动后端nginx-rtmp服务器"
 WORKDIR /usr/local/nginx
-RUN pwd
-RUN ls
+RUN cd conf
+RUN rm nginx.conf
+RUN mv ../nginx.conf nginx.conf
+RUN cd ..
 RUN ./sbin/nginx
 
 RUN echo "启动后端异步服务器"
