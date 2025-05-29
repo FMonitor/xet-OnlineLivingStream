@@ -10,6 +10,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 
 # 拷贝 nginx 配置
 COPY ./xet-operation/frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./xet-operation/frontend/navigate.html /usr/share/nginx/html/navigate.html
  
 # 拷贝本地证书
 COPY ./xet-operation/frontend/ssl/lcmonitor.dynv6.net/fullchain.pem /etc/ssl/certs/fullchain.pem

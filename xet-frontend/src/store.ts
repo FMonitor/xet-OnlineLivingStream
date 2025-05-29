@@ -23,7 +23,7 @@ export const useLiveStore = defineStore('live', () => {
     const currentUserId = ref<number | null>(null);
     const userSelected = ref<boolean>(false);
     const availableUsers = ref<User[]>([
-        { id: 1, name: '用户1', color: '#1976d2' },
+        { id: 1, name: '用户1(主播)', color: '#1976d2' },
         { id: 2, name: '用户2', color: '#388e3c' },
         { id: 3, name: '用户3', color: '#f57c00' }
     ]);
@@ -77,54 +77,58 @@ export const useLiveStore = defineStore('live', () => {
 
     // 开始直播
     async function startStreaming(): Promise<boolean> {
-        if (!currentLiveId.value || !isStreamer.value) {
-            console.warn('无权限开始直播或直播间ID缺失');
-            return false;
-        }
-
-        isStreamingLoading.value = true;
-        
-        try {
-            const response = await liveAPI.startLive(currentLiveId.value);
-            
-            if (response.statusCode === 200 && response.data && response.data.length > 0) {
-                const streamData = response.data[0];
-                
-                // 更新播放URL
-                if (streamData.living_url) {
-                    playback_url.value = streamData.living_url;
-                    console.log('直播开始，播放地址:', streamData.living_url);
-                }
-                
-                // 更新直播状态
-                isStreaming.value = true;
-                isLiving.value = true;
-                
-                // 更新liveInfo中的直播URL（如果需要）
-                if (liveInfo.value) {
-                    liveInfo.value.living_stream_url = streamData.living_url || streamData.living_stream_url;
-                }
-                
-                console.log('直播开始成功:', {
-                    playback_id: streamData.playback_id,
-                    living_stream_url: streamData.living_stream_url,
-                    living_stream_code: streamData.living_stream_code,
-                    living_url: streamData.living_url
-                });
-                
-                return true;
-            } else {
-                throw new Error('开始直播响应数据格式错误');
-            }
-        } catch (e) {
-            const errorMsg = e instanceof Error ? e.message : '开始直播失败';
-            error.value = errorMsg;
-            console.error('开始直播失败:', e);
-            return false;
-        } finally {
-            isStreamingLoading.value = false;
-        }
+    if (!currentLiveId.value || !isStreamer.value) {
+        console.warn('无权限开始直播或直播间ID缺失');
+        return false;
     }
+
+    isStreamingLoading.value = true;
+    
+    try {
+        const response = await liveAPI.startLive(currentLiveId.value);
+        
+        if (response.statusCode === 200 && response.data && response.data.length > 0) {
+            const streamData = response.data[0];
+            
+            // 更新播放URL - 支持HLS流
+            if (streamData.living_url) {
+                playback_url.value = streamData.living_url;
+                console.log('直播开始，播放地址:', streamData.living_url);
+                
+                // 检测流类型
+                const isHLS = streamData.living_url.toLowerCase().includes('.m3u8');
+                console.log('流类型:', isHLS ? 'HLS' : 'MP4/其他');
+            }
+            
+            // 更新直播状态
+            isStreaming.value = true;
+            isLiving.value = true;
+            
+            // 更新liveInfo中的直播URL
+            if (liveInfo.value) {
+                liveInfo.value.living_stream_url = streamData.living_url || streamData.living_stream_url;
+            }
+            
+            console.log('直播开始成功:', {
+                playback_id: streamData.playback_id,
+                living_stream_url: streamData.living_stream_url,
+                living_stream_code: streamData.living_stream_code,
+                living_url: streamData.living_url
+            });
+            
+            return true;
+        } else {
+            throw new Error('开始直播响应数据格式错误');
+        }
+    } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : '开始直播失败';
+        error.value = errorMsg;
+        console.error('开始直播失败:', e);
+        return false;
+    } finally {
+        isStreamingLoading.value = false;
+    }
+}
 
     // 结束直播
     async function endStreaming(): Promise<boolean> {
