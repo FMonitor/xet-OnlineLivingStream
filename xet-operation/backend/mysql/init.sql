@@ -116,8 +116,14 @@ INSERT INTO user_living_stream (user_id, living_stream_id) VALUES
 
 -- 为每个直播添加文件信息
 INSERT INTO live_file (living_stream_id, creator_user_id, file_url) VALUES 
-(1, 2, 'https://lcmonitor.dynv6.net/file/playlist_live.m3u8'),
-(2, 2, 'https://lcmonitor.dynv6.net/file/playlist_live.m3u8');
+(1, 1, 'https://lcmonitor.dynv6.net/file/P1017.cpp'),
+(1, 2, 'https://lcmonitor.dynv6.net/file/Cornfield Chase.mp3'),
+(1, 1, 'https://lcmonitor.dynv6.net/file/QL-Blackjack.py'),
+(1, 2, 'https://lcmonitor.dynv6.net/file/HowToWriteDoc.pptx'),
+(2, 1, 'https://lcmonitor.dynv6.net/file/0.svg'),
+(2, 2, 'https://lcmonitor.dynv6.net/file/playlist_live.m3u8'),
+(2, 1, 'https://lcmonitor.dynv6.net/file/P1017.cpp'),
+(2, 2, 'https://lcmonitor.dynv6.net/file/pom.xml');
 
 -- 为每个直播添加评论信息
 INSERT INTO live_comment (living_stream_id, creator_user_id, content) VALUES 
