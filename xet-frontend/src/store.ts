@@ -27,6 +27,8 @@ export const useLiveStore = defineStore('live', () => {
         { id: 2, name: '用户2', color: '#388e3c' },
         { id: 3, name: '用户3', color: '#f57c00' }
     ]);
+    const isPlaybackMode = ref<boolean>(false);
+    const playbackId = ref<number | null>(null);
 
     // 计算属性：获取当前用户信息
     const currentUser = computed(() => {
@@ -195,32 +197,21 @@ export const useLiveStore = defineStore('live', () => {
         localStorage.removeItem('selectedUserId');
     }
 
-    // === 直播业务方法（保持原有逻辑）===
-    // 修正数据转换函数
+    // === 直播业务方法 ===
     function transformComment(comment: Comment): Comment {
-        console.log('转换评论数据:', comment);
-
-        // 不要覆盖已有的正确数据，直接返回原始数据
         const transformedComment = {
             ...comment,
-            // 确保 creator_user_id 是正确的，优先使用原始数据
             creator_user_id: comment.creator_user_id || comment.user_id || 0,
             living_stream_id: comment.living_stream_id || currentLiveId.value || 0
         };
 
-        console.log('转换后的评论数据:', transformedComment);
         return transformedComment;
     }
 
     function transformExplanation(explanation: Explanation): Explanation {
-        // console.log('转换讲解数据:', explanation);
-
-        // 不要覆盖已有的正确数据
         const transformedExplanation = {
             ...explanation,
-            // 确保 ID 字段正确
             expla_id: explanation.expla_id || explanation.explanation_id || 0,
-            // 确保 creator_user_id 是正确的
             creator_user_id: explanation.creator_user_id || explanation.user_id || 0,
             living_stream_id: explanation.living_stream_id || currentLiveId.value || 0
         };
@@ -230,29 +221,41 @@ export const useLiveStore = defineStore('live', () => {
     }
 
     function transformFile(file: File): File {
-        // console.log('转换文件数据:', file);
-
         const transformedFile = {
             ...file,
             creator_user_id: file.creator_user_id || file.user_id || 0,
             living_stream_id: file.living_stream_id || currentLiveId.value || 0
         };
 
-        // console.log('转换后的文件数据:', transformedFile);
         return transformedFile;
     }
 
     // 加载直播信息（包含初始评论、讲解、文件）
-    async function loadLiveInfo(liveId: number | string) {
+    async function loadLiveInfo(liveId: number | string, playbackIdParam?: number | string) {
         isLoading.value = true;
         error.value = null;
         currentLiveId.value = Number(liveId);
-        playback_url.value = null;
+        
+        // 检查是否为回放模式
+        if (playbackIdParam) {
+            isPlaybackMode.value = true;
+            playbackId.value = Number(playbackIdParam);
+            
+            // 回放模式：构建视频文件URL
+            const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lcmonitor.dynv6.net';
+            playback_url.value = `${baseUrl}/file/video${playbackIdParam}.mp4`;
+            
+            console.log('回放模式激活，视频地址:', playback_url.value);
+        } else {
+            isPlaybackMode.value = false;
+            playbackId.value = null;
+            playback_url.value = null;
+        }
 
         try {
+            // 无论是直播还是回放，都获取直播间信息以获取消息
             const apiResponse = await liveAPI.fetchLiveInfo(liveId);
 
-            // 使用正确的字段名检查响应
             if (apiResponse.statusCode !== 200) {
                 throw new Error(apiResponse.message || '获取直播信息失败');
             }
@@ -264,46 +267,55 @@ export const useLiveStore = defineStore('live', () => {
             liveInfo.value = apiResponse.data[0];
             console.log('设置liveInfo:', liveInfo.value);
 
-            // 更新状态变量 - 使用实际字段名
-            liveTitle.value = liveInfo.value.description || `直播间 ${liveId}`;
-            liveCoverUrl.value = ''; // 实际响应中没有封面URL
-            isLiving.value = liveInfo.value.living_stream_url !== "0";
-            isStreaming.value = isLiving.value && isStreamer.value;
+            // 更新状态变量
+            liveTitle.value = isPlaybackMode.value 
+                ? `回放 ${playbackIdParam} - ${liveInfo.value.description || `直播间 ${liveId}`}`
+                : liveInfo.value.description || `直播间 ${liveId}`;
+            
+            liveCoverUrl.value = '';
+            
+            // 回放模式下不显示为"正在直播"
+            if (isPlaybackMode.value) {
+                isLiving.value = false;
+                isStreaming.value = false;
+            } else {
+                isLiving.value = liveInfo.value.living_stream_url !== "0";
+                isStreaming.value = isLiving.value && isStreamer.value;
+                
+                // 直播模式：使用API返回的直播URL
+                if (liveInfo.value.living_stream_url && liveInfo.value.living_stream_url !== "0") {
+                    playback_url.value = liveInfo.value.living_stream_url;
+                }
+            }
+
+            // WebSocket URLs（回放模式下也可以连接以获取实时消息）
             commentRoomUrl.value = liveInfo.value.living_comment_room_url;
             explanationRoomUrl.value = liveInfo.value.living_expla_room_url;
             broadcastRoomUrl.value = liveInfo.value.living_broadcast_room_url;
 
-            // 设置播放地址
-            if (liveInfo.value.living_stream_url && liveInfo.value.living_stream_url !== "0") {
-                playback_url.value = liveInfo.value.living_stream_url;
-            }
-
-            // 初始化数据 - 使用正确的字段名
+            // 初始化消息数据
             if (liveInfo.value.comments && Array.isArray(liveInfo.value.comments)) {
                 comments.length = 0;
-                // console.log('加载评论数据:', liveInfo.value.comments.length, '条');
                 const transformedComments = liveInfo.value.comments.map(transformComment);
                 comments.push(...transformedComments);
             }
 
             if (liveInfo.value.explanations && Array.isArray(liveInfo.value.explanations)) {
                 explanations.length = 0;
-                // console.log('加载讲解数据:', liveInfo.value.explanations.length, '条');
                 const transformedExplanations = liveInfo.value.explanations.map(transformExplanation);
                 explanations.push(...transformedExplanations);
             }
 
             if (liveInfo.value.files && Array.isArray(liveInfo.value.files)) {
                 files.length = 0;
-                // console.log('加载文件数据:', liveInfo.value.files.length, '条');
                 const transformedFiles = liveInfo.value.files.map(transformFile);
                 files.push(...transformedFiles);
             }
 
-            // 使用实际的页数信息
-            commentPage.value = liveInfo.value.page_count_comment-1 || 0;
-            explanationPage.value = liveInfo.value.page_count_explanation-1 || 0;
-            filePage.value = liveInfo.value.page_count_file-1 || 0;
+            // 页数信息
+            commentPage.value = liveInfo.value.page_count_comment - 1 || 0;
+            explanationPage.value = liveInfo.value.page_count_explanation - 1 || 0;
+            filePage.value = liveInfo.value.page_count_file - 1 || 0;
 
             console.log('数据加载完成 - 评论:', comments.length, '讲解:', explanations.length, '文件:', files.length);
 
@@ -316,25 +328,20 @@ export const useLiveStore = defineStore('live', () => {
     }
 
     // 连接到直播间聊天室
-    async function connectToChat(liveId: string | number, userId: number) {
-        // console.log('=== 连接WebSocket聊天室 ===');
-        // console.log('直播ID:', liveId);
-        // console.log('用户ID:', userId);
-        // console.log('聊天室URLs:', {
-        //     comment: commentRoomUrl.value,
-        //     explanation: explanationRoomUrl.value,
-        //     broadcast: broadcastRoomUrl.value
-        // });
+    async function connectToChat(liveId: string | number, userId: number, forceConnect: boolean = false) {
+        // 回放模式下，用户可以选择是否连接WebSocket获取实时消息
+        if (isPlaybackMode.value && !forceConnect) {
+            return true;
+        }
 
         try {
             await wsManager.connect(liveId, userId);
-            // console.log('WebSocket聊天室连接成功');
             return true;
         } catch (error) {
-            console.error('WebSocket聊天室连接失败:', error);
             return false;
         }
     }
+
     function disconnectFromChat() {
         wsManager.disconnect();
     }
@@ -511,6 +518,8 @@ export const useLiveStore = defineStore('live', () => {
         commentRoomUrl,
         explanationRoomUrl,
         broadcastRoomUrl,
+        isPlaybackMode,
+        playbackId,
 
         // 加载状态
         hasMoreComments,

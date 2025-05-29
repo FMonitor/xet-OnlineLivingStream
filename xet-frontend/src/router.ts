@@ -1,11 +1,16 @@
-
 import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 
 const routes = [
   {
     path: '/live/:liveId',
-    component: App
+    component: App,
+    name: 'live'
+  },
+  {
+    path: '/live/:liveId/playback/:playbackId',
+    component: App,
+    name: 'playback'
   }
 ]
 

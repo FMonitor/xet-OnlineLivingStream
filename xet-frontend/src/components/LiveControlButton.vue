@@ -1,28 +1,21 @@
 <!-- src/components/LiveControlButton.vue -->
 <template>
-    <div 
-        v-if="liveStore.isStreamer" 
-        class="live-control-button"
-        :class="{ 'streaming': liveStore.isStreaming, 'loading': liveStore.isStreamingLoading }"
-    >
-        <button 
-            class="control-btn"
-            :disabled="liveStore.isStreamingLoading"
-            @click="toggleStreaming"
-        >
+    <div <div v-if="liveStore.isStreamer && !liveStore.isPlaybackMode" class="live-control-button"
+        :class="{ 'streaming': liveStore.isStreaming, 'loading': liveStore.isStreamingLoading }">
+        <button class="control-btn" :disabled="liveStore.isStreamingLoading" @click="toggleStreaming">
             <!-- 加载状态 -->
             <div v-if="liveStore.isStreamingLoading" class="loading-content">
                 <div class="spinner"></div>
                 <span>{{ liveStore.isStreaming ? '结束中...' : '开始中...' }}</span>
             </div>
-            
+
             <!-- 正常状态 -->
             <div v-else class="button-content">
                 <div class="status-indicator" :class="{ 'live': liveStore.isStreaming }"></div>
                 <span>{{ liveStore.isStreaming ? '结束直播' : '开始直播' }}</span>
             </div>
         </button>
-        
+
         <!-- 直播状态提示 -->
         <div v-if="liveStore.isStreaming" class="live-status">
             <span class="live-text">● 直播中</span>
@@ -118,9 +111,11 @@ async function toggleStreaming() {
     0% {
         box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
     }
+
     50% {
         box-shadow: 0 4px 25px rgba(255, 107, 107, 0.5);
     }
+
     100% {
         box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
     }
@@ -146,8 +141,16 @@ async function toggleStreaming() {
 }
 
 @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0.3;
+    }
 }
 
 .loading-content {
@@ -166,8 +169,13 @@ async function toggleStreaming() {
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .live-status {
@@ -182,10 +190,13 @@ async function toggleStreaming() {
 }
 
 @keyframes pulse-status {
-    0%, 100% { 
+
+    0%,
+    100% {
         background: rgba(255, 68, 68, 0.9);
     }
-    50% { 
+
+    50% {
         background: rgba(255, 68, 68, 0.7);
     }
 }
@@ -202,7 +213,7 @@ async function toggleStreaming() {
         top: 10px;
         left: 10px;
     }
-    
+
     .control-btn {
         padding: 10px 16px;
         font-size: 13px;
@@ -213,7 +224,8 @@ async function toggleStreaming() {
 /* 避免与用户指示器重叠 */
 @media (max-width: 480px) {
     .live-control-button {
-        top: 60px; /* 为用户指示器留出空间 */
+        top: 60px;
+        /* 为用户指示器留出空间 */
     }
 }
 </style>
