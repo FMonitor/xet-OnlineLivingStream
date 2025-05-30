@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # 同时启动两个脚本
-./xet-backend-async-exe &
+/app/xet-backend-async/build/xet-backend-async-exe &
 pid1=$!
 
-./xet-backend-sync-exe &
+/app/xet-backend-sync/build/xet-backend-sync-exe &
 pid2=$!
 
 # 等待两个脚本完成

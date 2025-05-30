@@ -12,14 +12,12 @@ WORKDIR /app/xet-backend-async
 RUN rm -rdf build && mkdir build
 WORKDIR /app/xet-backend-async/build
 RUN cmake .. && make
-RUN mv xet-backend-async-exe ../../package
 
 RUN echo "启动后端同步服务器"
 WORKDIR /app/xet-backend-sync
 RUN rm -rdf build && mkdir build
 WORKDIR /app/xet-backend-sync/build
 RUN cmake .. && make
-RUN mv xet-backend-sync-exe ../../package
 
 # 执行程序
 WORKDIR /app/package
