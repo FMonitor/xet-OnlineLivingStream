@@ -269,10 +269,28 @@ const showCenterIcon = ref(false) // 控制中心图标的显示
 const fadeOutIcon = ref(false)
 let iconTimer: number | null = null
 
+// 检测是否为移动设备
+const isMobileDevice = computed(() => {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const mobileKeywords = [
+    'android', 'webos', 'iphone', 'ipad', 'ipod', 
+    'blackberry', 'windows phone', 'mobile', 'tablet'
+  ];
+  
+  return mobileKeywords.some(keyword => userAgent.includes(keyword)) || 
+         window.innerWidth <= 768 || 
+         /Mobi|Android/i.test(navigator.userAgent);
+});
+
 // 支持不同的视频类型
 watchEffect(() => {
   if (liveStore.playback_url) {
     console.log('视频地址已更新:', liveStore.playback_url)
+    console.log('设备信息:', {
+      isMobile: isMobileDevice.value,
+      isPlayback: liveStore.isPlaybackMode,
+      shouldMP4: shouldMP4.value
+    })
 
     // 检测流类型
     currentStreamType.value = detectStreamType(liveStore.playback_url)
@@ -303,19 +321,11 @@ watchEffect(() => {
     // 默认选择第一条线路
     currentLine.value = lines.value[0]
 
-    // 只有在有播放URL且（回放模式或直播已开始）时才初始化播放器
+    // 初始化播放器
     const video = videoRef.value
     if (video && (liveStore.isPlaybackMode || liveStore.isliving)) {
       isLoading.value = true
-
-      if (currentStreamType.value === 'hls') {
-        initHLS(video, liveStore.playback_url)
-      } else if (currentStreamType.value === 'mp4') {
-        initMP4(video, liveStore.playback_url)
-      } else {
-        console.warn('未知的流类型，尝试使用原生播放器')
-        initMP4(video, liveStore.playback_url)
-      }
+      initVideoPlayer(video, liveStore.playback_url)
     }
   } else if (!liveStore.isPlaybackMode && !liveStore.isliving) {
     // 直播模式但未开始直播，清理播放器状态
@@ -328,7 +338,7 @@ watchEffect(() => {
       duration.value = 0
       progressPercentage.value = 0
     }
-
+    
     // 销毁HLS实例
     if (hls.value) {
       hls.value.destroy()
@@ -336,6 +346,10 @@ watchEffect(() => {
     }
   }
 })
+
+const shouldMP4 = computed(() => {
+  return isMobileDevice.value && liveStore.isPlaybackMode;
+});
 
 // 计算进度条的百分比
 const progressPercentage = ref(0)
@@ -348,6 +362,8 @@ const onSeek = () => {
     video.currentTime = currentTime.value
   }
 }
+
+const showPlayButton = ref(false)
 
 function initVideo() {
   if (!videoRef.value) return;
@@ -373,14 +389,35 @@ function formatTime(seconds: number): string {
 function detectStreamType(url: string): 'hls' | 'mp4' | 'unknown' {
   if (!url) return 'unknown'
 
+  if (shouldMP4.value) {
+    return 'mp4'
+  }
+  
   const urlLower = url.toLowerCase()
   if (urlLower.includes('.m3u8')) {
     return 'hls'
   } else if (urlLower.includes('.mp4') || urlLower.includes('.webm') || urlLower.includes('.ogg')) {
     return 'mp4'
   }
-
+  
   return 'unknown'
+}
+
+function initVideoPlayer(video: HTMLVideoElement, url: string) {
+  console.log('初始化视频播放器', {
+    url,
+    isMobile: isMobileDevice.value,
+    isPlayback: liveStore.isPlaybackMode,
+    shouldForceMP4: shouldMP4.value
+  })
+  
+  const streamType = detectStreamType(url)
+  
+  if (streamType === 'hls' && !shouldMP4.value) {
+    initHLS(video, url)
+  } else {
+    initMP4(video, url)
+  }
 }
 
 // 初始化HLS播放器
@@ -566,77 +603,142 @@ function initHLS(video: HTMLVideoElement, url: string) {
 // 初始化MP4播放器
 function initMP4(video: HTMLVideoElement, url: string) {
   console.log('初始化MP4播放器，URL:', url)
-
+  console.log('设备信息:', {
+    userAgent: navigator.userAgent,
+    isMobile: isMobileDevice.value,
+    screenWidth: window.innerWidth
+  })
+  
   // 销毁HLS实例（如果存在）
   if (hls.value) {
+    console.log('销毁现有HLS实例')
     hls.value.destroy()
     hls.value = null
   }
 
-  // 使用原生video标签播放
-  video.src = url
-  video.load()
+  // 清理现有的事件监听器
+  const newVideo = video.cloneNode(true) as HTMLVideoElement
+  video.parentNode?.replaceChild(newVideo, video)
+  videoRef.value = newVideo
 
-  // 修复播放策略 - 回放和直播都自动播放
-  if (liveStore.isPlaybackMode) {
-    console.log('回放模式：自动开始播放')
+  // 设置视频属性
+  newVideo.controls = false
+  newVideo.preload = 'metadata'
+  newVideo.playsInline = true // 移动端内联播放
+  newVideo.muted = false // 初始不静音
+  
+  // 移动端特殊设置
+  if (isMobileDevice.value) {
+    newVideo.setAttribute('webkit-playsinline', 'true')
+    newVideo.setAttribute('playsinline', 'true')
+    newVideo.setAttribute('x5-video-player-type', 'h5') // 腾讯X5内核
+    newVideo.setAttribute('x5-video-player-fullscreen', 'false')
+    newVideo.setAttribute('x5-video-orientation', 'portraint') // 竖屏
+  }
 
-    // 等待视频加载完成后播放
-    video.addEventListener('loadeddata', () => {
-      video.play()
+  // 设置视频源
+  newVideo.src = url
+  
+  // 添加事件监听器
+  newVideo.addEventListener('loadstart', () => {
+    console.log('MP4: 开始加载')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('loadedmetadata', () => {
+    console.log('MP4: 元数据加载完成', {
+      duration: newVideo.duration,
+      videoWidth: newVideo.videoWidth,
+      videoHeight: newVideo.videoHeight
+    })
+  })
+  
+  newVideo.addEventListener('loadeddata', () => {
+    console.log('MP4: 数据加载完成')
+    isLoading.value = false
+    
+    // 回放模式自动播放
+    if (liveStore.isPlaybackMode) {
+      console.log('回放模式：尝试自动播放')
+      
+      // 移动端需要用户交互才能播放，先尝试播放
+      newVideo.play()
         .then(() => {
           isPlaying.value = true
           console.log('MP4回放自动播放成功')
         })
         .catch(err => {
+          console.log('自动播放被阻止:', err.name, err.message)
+          
           if (err.name === 'NotAllowedError') {
-            console.log('回放模式尝试静音播放...')
-            video.muted = true
-            previousVolume.value = volume.value
-            volume.value = 0
+            console.log('尝试静音播放...')
+            newVideo.muted = true
             isMuted.value = true
-            video.play()
+            volume.value = 0
+            
+            newVideo.play()
               .then(() => {
                 isPlaying.value = true
                 console.log('MP4回放静音自动播放成功')
               })
               .catch(err2 => {
-                console.error('MP4回放静音也无法自动播放:', err2)
+                console.error('静音播放也失败:', err2)
                 isPlaying.value = false
+                // 显示点击播放提示
+                showPlayButton.value = true
               })
           } else {
-            console.error('MP4回放播放失败:', err)
+            console.error('播放失败:', err)
             isPlaying.value = false
+            showPlayButton.value = true
           }
         })
-    }, { once: true })
+    }
+  })
+  
+  newVideo.addEventListener('canplay', () => {
+    console.log('MP4: 可以播放')
+    isLoading.value = false
+  })
+  
+  newVideo.addEventListener('error', (e) => {
+    const error = newVideo.error
+    console.error('MP4播放错误:', {
+      code: error?.code,
+      message: error?.message,
+      url: url
+    })
+    
+    errorState.value = true
+    errorMessage.value = `视频加载失败 (错误代码: ${error?.code})`
+    isLoading.value = false
+  })
+  
+  newVideo.addEventListener('stalled', () => {
+    console.log('MP4: 网络停滞')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('waiting', () => {
+    console.log('MP4: 等待数据')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('playing', () => {
+    console.log('MP4: 开始播放')
+    isLoading.value = false
+    isPlaying.value = true
+    showPlayButton.value = false
+  })
+  
+  newVideo.addEventListener('pause', () => {
+    console.log('MP4: 暂停播放')
+    isPlaying.value = false
+  })
 
-  } else {
-    console.log('直播模式：自动开始播放')
-
-    video.addEventListener('loadeddata', () => {
-      video.play()
-        .then(() => {
-          isPlaying.value = true
-          console.log('MP4直播自动播放成功')
-        })
-        .catch(err => {
-          if (err.name === 'NotAllowedError') {
-            console.log('尝试静音播放...')
-            video.muted = true
-            previousVolume.value = volume.value
-            volume.value = 0
-            isMuted.value = true
-            video.play()
-              .then(() => {
-                isPlaying.value = true
-                console.log('MP4静音自动播放成功')
-              })
-              .catch(err2 => console.error('MP4静音也无法自动播放:', err2))
-          }
-        })
-    }, { once: true })
-  }
+  // 加载视频
+  newVideo.load()
+  console.log('调用 video.load()')
 }
 
 // HLS降级处理
@@ -652,7 +754,7 @@ function handleHLSFallback(video: HTMLVideoElement, url: string) {
   // video.load()
 }
 
-// 处理视频错误的函数
+// 处理视频错误
 function handleVideoError(e: Event) {
   console.error('视频播放出错', e)
   isLoading.value = false
@@ -700,7 +802,7 @@ function handleVideoError(e: Event) {
   }
 }
 
-// 重试加载视频的函数
+// 重试加载视频
 function retryLoadVideo() {
   if (retryTimer) {
     clearTimeout(retryTimer)
