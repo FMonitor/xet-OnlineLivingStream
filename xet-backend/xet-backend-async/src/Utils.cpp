@@ -24,12 +24,15 @@ oatpp::String StaticFilesManager::getFile(const oatpp::String& path) {
     return nullptr;
   }
   std::lock_guard<oatpp::concurrency::SpinLock> lock(m_lock);
-  auto& file = m_cache [path];
-  if(file) {
-    return file;
-  }
+  // 禁用缓存
+  //  auto& file = m_cache [path];
+  //  if(file) {
+  //    return file;
+  //  }
   oatpp::String filename = m_basePath + "/" + path;
-  file = oatpp::String::loadFromFile(filename->c_str());
+  // 禁用缓存
+  //  file = oatpp::String::loadFromFile(filename->c_str());
+  oatpp::String file = oatpp::String::loadFromFile(filename->c_str());
   return file;
 }
 
