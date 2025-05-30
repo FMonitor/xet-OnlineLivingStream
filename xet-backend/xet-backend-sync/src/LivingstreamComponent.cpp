@@ -43,6 +43,18 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
 
   // 拼接分片文件（ts）路径模式
   std::string ts_full_pattern = hls_output_dir + "/" + ts_pattern;
+  
+  // 打印当前工作目录
+  char cwd[1024];
+  if (getcwd(cwd, sizeof(cwd)) != nullptr)
+  {
+    std::cout << "Current working directory: " << cwd << std::endl;
+  }
+  else
+  {
+    std::cerr << "Failed to get current working directory." << std::endl;
+  }
+
   if (mkdir(hls_output_dir.c_str(), 0755) == -1)
   {
     if (errno != EEXIST)
