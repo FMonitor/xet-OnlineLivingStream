@@ -13,6 +13,7 @@
 std::map<int, int> LivingstreamPid;
 // RTMP服务器监听地址,在OBS上就直接填这个就行了.最终的推流地址为RTMP_URL+推流码(就是直播间id)
 const std::string RTMP_URL = "rtmp://lcmonitor.dynv6.net:1935/live/";
+const std::string RTMP_URL_LOCALHOST = "rtmp://localhost:1935/live/";
 // 直播文件m3u8存储的地址,用于给观众访问.观众最终访问的路径在Dao中会组装好
 const std::string FILE_URL = "http://lcmonitor.dynv6.net/file/";
 // ffmpeg拉流后存储hls文件的地址.最终的文件地址为OUTPUT_URL+回放id
@@ -62,7 +63,7 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
     // 子进程
     execlp(
         "ffmpeg", "ffmpeg",
-        "-i", obs_rtmp_url.c_str(),
+        "-i", (RTMP_URL_LOCALHOST + std::to_string(living_id)).c_str(),
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-g", "60",
         "-c:a", "aac", "-b:a", "128k",
         "-f", "hls",
