@@ -17,8 +17,8 @@ const std::string RTMP_URL_LOCALHOST = "rtmp://localhost:1935/live/";
 // 直播文件m3u8存储的地址,用于给观众访问.观众最终访问的路径在Dao中会组装好
 const std::string FILE_URL = "http://lcmonitor.dynv6.net/file/";
 // ffmpeg拉流后存储hls文件的地址.最终的文件地址为OUTPUT_URL+回放id
-const std::string OUTPUT_POS = "../../xet-backend-async/file/";
-
+// const std::string OUTPUT_POS = "../../xet-backend-async/file/";
+const std::string OUTPUT_POS = "app/xet-backend-async/file/";
 // 函数1:根据直播间id,回放id,开启一个新的进程并使用ffmpeg监听一个推流链接(需要回放id),并将进程号记录在LivingstreamPid(需要直播间id)
 // 不返回信息,直接传StartLivingDto的引用然后修改
 // 推流链接:
