@@ -84,7 +84,7 @@ export interface ApiResponse<T> {
 export interface LiveStreamInfo {
     living_stream_id: number;
     creator_user_id: number;
-    description: string;                  
+    description: string;                   // 实际响应中的字段
     living_stream_url: string;
     living_comment_room_url: string;
     living_expla_room_url: string;
@@ -92,22 +92,16 @@ export interface LiveStreamInfo {
     page_count_comment: number;
     page_count_explanation: number;
     page_count_file: number;
-    comments: Comment[];                  
-    explanations: Explanation[];          
-    files: File[];                        
-    isliving: boolean;                     // API返回的直播状态字段
-    living_cover_url: string | null;
-    living_title: string | null;
-    living_url: string;
-    living_stream_code: string;
-    playbacks: any[] | null;
+    comments: Comment[];                   // 实际响应中使用这个字段名
+    explanations: Explanation[];           // 实际响应中使用这个字段名
+    files: File[];                         // 实际响应中使用这个字段名
 }
 
 // 修改评论接口 - 适配实际响应格式
 export interface Comment {
     comment_id: number;
     living_stream_id: number;
-    creator_user_id: number;              
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
     content: string;
     sending?: boolean;
@@ -118,9 +112,9 @@ export interface Comment {
 
 // 修改讲解接口 - 适配实际响应格式
 export interface Explanation {
-    expla_id: number;                     
+    expla_id: number;                      // 实际响应中使用这个字段名
     living_stream_id: number;
-    creator_user_id: number;              
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
     content: string;
     sending?: boolean;
@@ -134,7 +128,7 @@ export interface Explanation {
 export interface File {
     file_id: number;
     living_stream_id: number;
-    creator_user_id: number;              
+    creator_user_id: number;               // 实际响应中使用这个字段名
     created_at: string;
     file_url: string;
     file_size?: number;

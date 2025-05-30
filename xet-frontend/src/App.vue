@@ -15,11 +15,8 @@
       </button>
     </div>
 
-      <!-- 回放模式指示器 -->
-    <div v-if="liveStore.isPlaybackMode" class="playback-indicator">
-      <span>📹 回放模式 - 视频 {{ liveStore.playbackId }}</span>
-    </div>
-
+    
+    
     <!-- 直播控制按钮 -->
     <LiveControlButton />
 
@@ -176,7 +173,7 @@ onUnmounted(() => {
 .current-user-indicator {
   position: fixed;
   top: 20px;
-  right: 420px;
+  right: 20px;
   display: flex;
   align-items: center;
   background: rgba(73, 78, 94, 0.95);

@@ -51,7 +51,7 @@ export const useLiveStore = defineStore('live', () => {
 
     const liveTitle = ref<string>('');
     const liveCoverUrl = ref<string>('');
-    const isliving = ref<boolean>(false);
+    const isLiving = ref<boolean>(false);
     const commentRoomUrl = ref<string>('');
     const explanationRoomUrl = ref<string>('');
     const broadcastRoomUrl = ref<string>('');
@@ -77,58 +77,58 @@ export const useLiveStore = defineStore('live', () => {
 
     // 开始直播
     async function startStreaming(): Promise<boolean> {
-        if (!currentLiveId.value || !isStreamer.value) {
-            console.warn('无权限开始直播或直播间ID缺失');
-            return false;
-        }
-
-        isStreamingLoading.value = true;
-
-        try {
-            const response = await liveAPI.startLive(currentLiveId.value);
-
-            if (response.statusCode === 200 && response.data && response.data.length > 0) {
-                const streamData = response.data[0];
-
-                // 更新播放URL - 支持HLS流
-                if (streamData.living_url) {
-                    playback_url.value = streamData.living_url;
-                    console.log('直播开始，播放地址:', streamData.living_url);
-
-                    // 检测流类型
-                    const isHLS = streamData.living_url.toLowerCase().includes('.m3u8');
-                    console.log('流类型:', isHLS ? 'HLS' : 'MP4/其他');
-                }
-
-                // 更新直播状态
-                isStreaming.value = true;
-                isliving.value = true;
-
-                // 更新liveInfo中的直播URL
-                if (liveInfo.value) {
-                    liveInfo.value.living_stream_url = streamData.living_url || streamData.living_stream_url;
-                }
-
-                console.log('直播开始成功:', {
-                    playback_id: streamData.playback_id,
-                    living_stream_url: streamData.living_stream_url,
-                    living_stream_code: streamData.living_stream_code,
-                    living_url: streamData.living_url
-                });
-
-                return true;
-            } else {
-                throw new Error('开始直播响应数据格式错误');
-            }
-        } catch (e) {
-            const errorMsg = e instanceof Error ? e.message : '开始直播失败';
-            error.value = errorMsg;
-            console.error('开始直播失败:', e);
-            return false;
-        } finally {
-            isStreamingLoading.value = false;
-        }
+    if (!currentLiveId.value || !isStreamer.value) {
+        console.warn('无权限开始直播或直播间ID缺失');
+        return false;
     }
+
+    isStreamingLoading.value = true;
+    
+    try {
+        const response = await liveAPI.startLive(currentLiveId.value);
+        
+        if (response.statusCode === 200 && response.data && response.data.length > 0) {
+            const streamData = response.data[0];
+            
+            // 更新播放URL - 支持HLS流
+            if (streamData.living_url) {
+                playback_url.value = streamData.living_url;
+                console.log('直播开始，播放地址:', streamData.living_url);
+                
+                // 检测流类型
+                const isHLS = streamData.living_url.toLowerCase().includes('.m3u8');
+                console.log('流类型:', isHLS ? 'HLS' : 'MP4/其他');
+            }
+            
+            // 更新直播状态
+            isStreaming.value = true;
+            isLiving.value = true;
+            
+            // 更新liveInfo中的直播URL
+            if (liveInfo.value) {
+                liveInfo.value.living_stream_url = streamData.living_url || streamData.living_stream_url;
+            }
+            
+            console.log('直播开始成功:', {
+                playback_id: streamData.playback_id,
+                living_stream_url: streamData.living_stream_url,
+                living_stream_code: streamData.living_stream_code,
+                living_url: streamData.living_url
+            });
+            
+            return true;
+        } else {
+            throw new Error('开始直播响应数据格式错误');
+        }
+    } catch (e) {
+        const errorMsg = e instanceof Error ? e.message : '开始直播失败';
+        error.value = errorMsg;
+        console.error('开始直播失败:', e);
+        return false;
+    } finally {
+        isStreamingLoading.value = false;
+    }
+}
 
     // 结束直播
     async function endStreaming(): Promise<boolean> {
@@ -138,23 +138,23 @@ export const useLiveStore = defineStore('live', () => {
         }
 
         isStreamingLoading.value = true;
-
+        
         try {
             const response = await liveAPI.endLive(currentLiveId.value);
-
+            
             if (response.statusCode === 200) {
                 // 更新直播状态
                 isStreaming.value = false;
-                isliving.value = false;
-
+                isLiving.value = false;
+                
                 // 清除播放URL
                 // playback_url.value = null;
-
+                
                 // 更新liveInfo中的直播URL
                 if (liveInfo.value) {
                     liveInfo.value.living_stream_url = "0";
                 }
-
+                
                 console.log('直播结束成功');
                 return true;
             } else {
@@ -239,25 +239,25 @@ export const useLiveStore = defineStore('live', () => {
         isLoading.value = true;
         error.value = null;
         currentLiveId.value = Number(liveId);
-
+        
         // 检查是否为回放模式
         if (playbackIdParam) {
             isPlaybackMode.value = true;
             playbackId.value = Number(playbackIdParam);
-
+            
             // 回放模式：构建视频文件URL
             const baseUrl = import.meta.env.VITE_API_BASE_URL || 'https://lcmonitor.dynv6.net';
             playback_url.value = `${baseUrl}/file/video${playbackIdParam}.mp4`;
-
+            
             console.log('回放模式激活，视频地址:', playback_url.value);
         } else {
             isPlaybackMode.value = false;
             playbackId.value = null;
-            // 不要立即清空 playback_url，等API返回后再设置
+            playback_url.value = null;
         }
 
         try {
-            // 获取直播间信息
+            // 无论是直播还是回放，都获取直播间信息以获取消息
             const apiResponse = await liveAPI.fetchLiveInfo(liveId);
 
             if (apiResponse.statusCode !== 200) {
@@ -272,52 +272,32 @@ export const useLiveStore = defineStore('live', () => {
             console.log('设置liveInfo:', liveInfo.value);
 
             // 更新状态变量
-            liveTitle.value = isPlaybackMode.value
+            liveTitle.value = isPlaybackMode.value 
                 ? `回放 ${playbackIdParam} - ${liveInfo.value.description || `直播间 ${liveId}`}`
-                : liveInfo.value.living_title || liveInfo.value.description || `直播间 ${liveId}`;
-
-            liveCoverUrl.value = liveInfo.value.living_cover_url || '';
-
-            // 修复：根据API返回的状态设置直播状态
+                : liveInfo.value.description || `直播间 ${liveId}`;
+            
+            liveCoverUrl.value = '';
+            
+            // 回放模式下不显示为"正在直播"
             if (isPlaybackMode.value) {
-                // 回放模式下不显示为"正在直播"
-                isliving.value = false;
+                isLiving.value = false;
                 isStreaming.value = false;
             } else {
-                // 直播模式：根据API返回的 isliving 字段设置状态
-                isliving.value = liveInfo.value.isliving === true;
-
-                // 只有当API返回 isliving=true 且用户是主播时，才设置为正在推流
-                isStreaming.value = isliving.value && isStreamer.value;
-
-                console.log('直播状态设置:', {
-                    isliving: liveInfo.value.isliving,
-                    isStreamer: isStreamer.value,
-                    isStreaming: isStreaming.value
-                });
-
-                // 设置播放URL
-                if (isliving.value && liveInfo.value.living_url) {
-                    // 如果正在直播且有直播URL，使用直播URL
-                    playback_url.value = liveInfo.value.living_url;
-                    // console.log('使用直播URL:', liveInfo.value.living_url);
-                } else if (isliving.value && liveInfo.value.living_stream_url && liveInfo.value.living_stream_url !== "0") {
-                    // 备用：使用 living_stream_url
+                isLiving.value = liveInfo.value.living_stream_url !== "0";
+                isStreaming.value = isLiving.value && isStreamer.value;
+                
+                // 直播模式：使用API返回的直播URL
+                if (liveInfo.value.living_stream_url && liveInfo.value.living_stream_url !== "0") {
                     playback_url.value = liveInfo.value.living_stream_url;
-                    // console.log('使用备用直播URL:', liveInfo.value.living_stream_url);
-                } else {
-                    // 没有直播或没有有效URL
-                    playback_url.value = null;
-                    console.log('未设置播放URL，可能未开始直播');
                 }
             }
 
-            // WebSocket URLs 设置
+            // WebSocket URLs（回放模式下也可以连接以获取实时消息）
             commentRoomUrl.value = liveInfo.value.living_comment_room_url;
             explanationRoomUrl.value = liveInfo.value.living_expla_room_url;
             broadcastRoomUrl.value = liveInfo.value.living_broadcast_room_url;
 
-            // 初始化消息数据（保持不变）
+            // 初始化消息数据
             if (liveInfo.value.comments && Array.isArray(liveInfo.value.comments)) {
                 comments.length = 0;
                 const transformedComments = liveInfo.value.comments.map(transformComment);
@@ -341,7 +321,7 @@ export const useLiveStore = defineStore('live', () => {
             explanationPage.value = liveInfo.value.page_count_explanation - 1 || 0;
             filePage.value = liveInfo.value.page_count_file - 1 || 0;
 
-            // console.log('数据加载完成 - 评论:', comments.length, '讲解:', explanations.length, '文件:', files.length);
+            console.log('数据加载完成 - 评论:', comments.length, '讲解:', explanations.length, '文件:', files.length);
 
         } catch (e) {
             error.value = e instanceof Error ? e.message : '加载直播信息失败';
@@ -501,7 +481,7 @@ export const useLiveStore = defineStore('live', () => {
 
         liveTitle.value = '';
         liveCoverUrl.value = '';
-        isliving.value = false;
+        isLiving.value = false;
         commentRoomUrl.value = '';
         explanationRoomUrl.value = '';
         broadcastRoomUrl.value = '';
@@ -538,7 +518,7 @@ export const useLiveStore = defineStore('live', () => {
         playback_url,
         liveTitle,
         liveCoverUrl,
-        isliving,
+        isLiving,
         commentRoomUrl,
         explanationRoomUrl,
         broadcastRoomUrl,
