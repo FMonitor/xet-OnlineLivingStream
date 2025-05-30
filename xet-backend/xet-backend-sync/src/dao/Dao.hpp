@@ -594,6 +594,26 @@ public:
 
     DBSession.sql("USE xet_living_table").execute();
 
+    // 检查直播是否是开始状态
+    auto check_isliving = DBSession.sql("SELECT isliving FROM living_stream where living_stream_id=?")
+                              .bind((int64_t)id)
+                              .execute();
+    auto check_isliving_row = *(check_isliving.begin());
+    bool isliving = check_isliving_row[0].get<bool>();
+
+    if (isliving)
+    {
+      result_dto->statusCode = 500;
+      result_dto->message = "Currently in live status!";
+      return result_dto;
+    }
+
+    if(check_ffmpeg(id)){
+      result_dto->statusCode = 500;
+      result_dto->message = "RTMP stream not detected!";
+      return result_dto;
+    }
+
     // 构造playback_title
     auto now = std::chrono::system_clock::now();
     std::time_t now_time = std::chrono::system_clock::to_time_t(now);
@@ -623,7 +643,7 @@ public:
     std::string living_url = FILE_URL + std::to_string(playback_id) + "/playback" + std::to_string(playback_id) + ".m3u8";
 
     // 更新living_stream表
-    DBSession.sql("UPDATE living_stream SET living_stream_url = ?, living_stream_code = ?, living_url = ? WHERE living_stream_id = ?")
+    DBSession.sql("UPDATE living_stream SET living_stream_url = ?, living_stream_code = ?, living_url = ? , isliving =1 WHERE living_stream_id = ?")
         .bind(living_stream_url)
         .bind(living_stream_code)
         .bind(living_url)
@@ -658,8 +678,22 @@ public:
 
     DBSession.sql("USE xet_living_table").execute();
 
+    // 检查直播是否是结束状态
+    auto check_isliving = DBSession.sql("SELECT isliving FROM living_stream where living_stream_id=?")
+                              .bind((int64_t)id)
+                              .execute();
+    auto check_isliving_row = *(check_isliving.begin());
+    bool isliving = check_isliving_row[0].get<bool>();
+
+    if (!isliving)
+    {
+      result_dto->statusCode = 500;
+      result_dto->message = "Currently in ended status!";
+      return result_dto;
+    }
+
     // 清空对应字段
-    DBSession.sql("UPDATE living_stream SET living_url = '' WHERE living_stream_id = ?")
+    DBSession.sql("UPDATE living_stream SET living_url = '' , isliving = false WHERE living_stream_id = ?")
         .bind((int64_t)id)
         .execute();
 

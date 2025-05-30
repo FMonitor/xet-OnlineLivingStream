@@ -12,9 +12,9 @@
 
 std::map<int, int> LivingstreamPid;
 // RTMP服务器监听地址,在OBS上就直接填这个就行了.最终的推流地址为RTMP_URL+推流码(就是直播间id)
-const std::string RTMP_URL = "rtmp://lcmonitor.dynv6.net:1935/live/";
+const std::string RTMP_URL = "rtmp://localhost:1935/live/";
 // 直播文件m3u8存储的地址,用于给观众访问.观众最终访问的路径在Dao中会组装好
-const std::string FILE_URL = "https://lcmonitor.dynv6.net/file/";
+const std::string FILE_URL = "http://localhost/file/";
 // ffmpeg拉流后存储hls文件的地址.最终的文件地址为OUTPUT_URL+回放id
 const std::string OUTPUT_POS = "../../xet-backend-async/file/";
 
@@ -108,4 +108,35 @@ void end_ffmpeg(int64_t living_id)
   {
     std::cerr << "No ffmpeg process found for living_id=" << living_id << std::endl;
   }
+}
+
+// 检查指定RTMP流是否有推流
+bool check_ffmpeg(int64_t living_id)
+{
+  std::string rtmp_url = RTMP_URL + std::to_string(living_id);
+
+  // 构造ffprobe命令，-v error 只输出错误，-show_entries stream=codec_type 只显示流类型
+  std::string cmd = "ffprobe -v error -show_entries stream=codec_type -of default=noprint_wrappers=1:nokey=1 \"" + rtmp_url + "\" 2>&1";
+
+  FILE *pipe = popen(cmd.c_str(), "r");
+  if (!pipe)
+  {
+    std::cerr << "Failed to run ffprobe command." << std::endl;
+    return false;
+  }
+
+  char buffer[128];
+  std::string result;
+  while (fgets(buffer, sizeof(buffer), pipe) != nullptr)
+  {
+    result += buffer;
+  }
+  pclose(pipe);
+
+  // 如果有音视频流，ffprobe会输出"video"或"audio"
+  if (result.find("video") != std::string::npos || result.find("audio") != std::string::npos)
+  {
+    return true;
+  }
+  return false;
 }

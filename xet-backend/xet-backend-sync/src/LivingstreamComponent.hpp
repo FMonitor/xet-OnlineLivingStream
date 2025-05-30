@@ -17,3 +17,5 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id);
 
 // 函数2:根据直播间id,从LivestreamPid中找到直播间对应的ffmpeg运行进程,向直播间id对应的进程发送信号以停止ffmpeg进程
 void end_ffmpeg(int64_t living_id);
+
+bool check_ffmpeg(int64_t living_id);
