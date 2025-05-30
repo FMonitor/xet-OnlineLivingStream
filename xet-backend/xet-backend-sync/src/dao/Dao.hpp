@@ -628,9 +628,10 @@ public:
     std::string playback_title = "living_" + std::to_string(id) + time_buf;
 
     // 插入live_playback表
-    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title) VALUES (?, ?)")
+    DBSession.sql("INSERT INTO live_playback (living_stream_id, playback_title , playback_url) VALUES (?, ? ,' ')")
         .bind((int64_t)id)
         .bind(playback_title)
+
         .execute();
 
     // 获取刚插入的playback_id
