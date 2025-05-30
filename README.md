@@ -2,14 +2,47 @@
 
 本项目为一个轻量级直播互动平台，包含前端展示、后端服务与部署管理三部分，特性包括前后端分离、消息推送、用户交互和文件下载。
 
-## 项目功能介绍
-### 前端功能
-**导航页面**: 提供直播间查看、回放查看并跳转的功能  
-**直播间页面**：
-- 通用功能： 返回导航页面按钮、观看直播、
 ## 技术栈
 
 ![Static Badge](https://img.shields.io/badge/Oatpp-blue?style=social&logo=oatpp&logoColor=%23000000)  ![Static Badge](https://img.shields.io/badge/Mysql%20Connector%2FC%2B%2B-blue?style=social&logo=mysql&logoColor=%2304479C)  ![Static Badge](https://img.shields.io/badge/Nginx-blue?style=social&logo=nginx&logoColor=%23009688)  ![Static Badge](https://img.shields.io/badge/Docker-blue?style=social&logo=docker&logoColor=%23009688)  ![Static Badge](https://img.shields.io/badge/Vue%2BVite-blue?style=social&logo=vuedotjs&logoColor=%2341B883)  ![Static Badge](https://img.shields.io/badge/Node.js-blue?style=social&logo=nodedotjs&logoColor=%23339933)   ![Static Badge](https://img.shields.io/badge/GitHub%20Actions-blue?style=social&logo=githubactions&logoColor=%233288FF)
+
+## 项目功能介绍
+
+**公网访问地址**：[lcmonitor.dynv6.net](https://lcmonitor.dynv6.net/)
+
+### 前端功能
+ 
+**导航页面**: 提供直播间查看、回放查看并跳转的功能  
+
+**直播间页面**
+- 视频功能： 开始/结束直播（仅主播）、返回导航页面、观看直播、调整音量、拖拽进度条、倍速、切换线路、全屏等
+- 评论区功能：Websocket实时聊天、向上滚动加载历史信息、发送讲解内容（仅主播）、发送文字和表情评论、下载文件等  
+
+*注：1. 已对手机端进行响应式适配，但视频播放存在一些问题亟待修复。2.可以通过切换用户身份模拟不同用户*
+
+### 后端功能
+
+**MySQL**: 记录用户信息、直播间信息（直播状态、讲解、评论、文件及下载地址）以及回放地址
+
+**同步服务器**: 负责处理数据库相关的修改和访问
+
+**异步服务器**: 负责处理文件、直播流相关访问
+
+### 运维功能
+
+**Docker**: 容器化平台各模块，便于服务部署和管理
+
+**Github Actions**: 开发过程中提供一键上传，自动部署测试环境的功能，降低调试难度
+
+**Nginx**: 实现路由功能，统一请求入口便于管理
+
+**公网域名和SSL证书**: 提供安全的访问入口
+
+**Portainer**: 实时监控各个容器运行状态，便于调试和后期维护
+
+### 项目开发日志
+
+[前端开发日志](./xet-frontend/README.md)   [后端开发日志](./xet-backend/开发日志.md)  
 
 ## 项目目录结构：
 

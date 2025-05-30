@@ -215,23 +215,15 @@ function getFileName(url: string): string {
 
 // 根据文件后缀获取对应的图标路径
 function getFileIcon(url: string): string {
-    if (!url) return new URL(`../../assets/icon/default_file.svg`, import.meta.url).href;
+    if (!url) return '/icon/default_file.svg';
 
-    const extension = url.split('.').pop()?.toLowerCase(); // 获取文件后缀
+    const extension = url.split('.').pop()?.toLowerCase();
     if (!extension) {
-        // 如果没有后缀，返回默认图标
-        return new URL(`../../assets/icon/default_file.svg`, import.meta.url).href;
+        return '/icon/default_file.svg';
     }
 
-    // 检查是否存在对应后缀的图标
-    const iconPath = `../../assets/icon/file_type_${extension}.svg`;
-    if (fileIcons[iconPath]) {
-        // 如果存在，返回图标路径
-        return new URL(iconPath, import.meta.url).href;
-    }
-
-    // 如果图标不存在，返回默认图标
-    return new URL(`../../assets/icon/default_file.svg`, import.meta.url).href;
+    // 直接使用 public 目录的路径
+    return `/icon/file_type_${extension}.svg`;
 }
 
 // 下载文件
