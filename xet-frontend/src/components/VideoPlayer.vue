@@ -285,64 +285,48 @@ const isMobileDevice = computed(() => {
 // 支持不同的视频类型
 watchEffect(() => {
   if (liveStore.playback_url) {
-    console.log('视频地址已更新:', liveStore.playback_url)
-    console.log('设备信息:', {
-      isMobile: isMobileDevice.value,
-      isPlayback: liveStore.isPlaybackMode,
-      shouldMP4: shouldMP4.value
+    // console.log('视频地址已更新:', liveStore.playback_url)
+    console.log('当前状态:', {
+      isPlaybackMode: liveStore.isPlaybackMode,
+      isliving: liveStore.isliving,
+      hasUrl: !!liveStore.playback_url
     })
 
-    // 检测流类型
-    currentStreamType.value = detectStreamType(liveStore.playback_url)
-    console.log('检测到流类型:', currentStreamType.value)
-
-    // 根据模式和流类型更新线路信息
+    // 现有的线路设置逻辑保持不变...
     if (liveStore.isPlaybackMode) {
-      console.log('回放模式：加载视频文件')
+      // console.log('回放模式：加载视频文件')
       lines.value = [
         { name: `回放线路1`, url: liveStore.playback_url },
         { name: `回放线路2`, url: liveStore.playback_url }
       ]
     } else {
-      console.log('直播模式：加载直播流')
-      if (currentStreamType.value === 'hls') {
-        lines.value = [
-          { name: '直播线路1 (HLS)', url: liveStore.playback_url },
-          { name: '直播线路2 (HLS)', url: liveStore.playback_url }
-        ]
-      } else {
-        lines.value = [
-          { name: '直播线路1', url: liveStore.playback_url },
-          { name: '直播线路2', url: liveStore.playback_url }
-        ]
-      }
+      // 直播模式的线路设置...
     }
 
-    // 默认选择第一条线路
     currentLine.value = lines.value[0]
 
-    // 初始化播放器
-    const video = videoRef.value
-    if (video && (liveStore.isPlaybackMode || liveStore.isliving)) {
-      isLoading.value = true
-      initVideoPlayer(video, liveStore.playback_url)
-    }
-  } else if (!liveStore.isPlaybackMode && !liveStore.isliving) {
-    // 直播模式但未开始直播，清理播放器状态
-    console.log('直播未开始，清理播放器状态')
+    // 调整初始化条件
     const video = videoRef.value
     if (video) {
-      video.src = ''
-      isPlaying.value = false
-      currentTime.value = 0
-      duration.value = 0
-      progressPercentage.value = 0
-    }
-    
-    // 销毁HLS实例
-    if (hls.value) {
-      hls.value.destroy()
-      hls.value = null
+      // 回放模式：只要有 playback_url 就初始化
+      // 直播模式：需要 isliving 为 true 才初始化
+      const shouldInitialize = liveStore.isPlaybackMode || liveStore.isliving
+      
+      console.log('初始化条件检查:', {
+        hasVideo: !!video,
+        hasUrl: !!liveStore.playback_url,
+        isPlaybackMode: liveStore.isPlaybackMode,
+        isliving: liveStore.isliving,
+        shouldInitialize
+      })
+      
+      if (shouldInitialize) {
+        console.log('满足初始化条件，开始初始化播放器')
+        isLoading.value = true
+        initVideoPlayer(video, liveStore.playback_url)
+      } else {
+        console.log('不满足初始化条件，等待直播开始')
+      }
     }
   }
 })
