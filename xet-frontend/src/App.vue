@@ -176,7 +176,7 @@ onUnmounted(() => {
 .current-user-indicator {
   position: fixed;
   top: 20px;
-  right: 20px;
+  right: 420px;
   display: flex;
   align-items: center;
   background: rgba(73, 78, 94, 0.95);
