@@ -3,6 +3,35 @@
     <video ref="videoRef" :src="videoSrc" class="video" @loadedmetadata="initVideo"
       @timeupdate="updateProgress"></video>
 
+    <!-- 返回导航页按钮 -->
+    <div class="back-to-home-button">
+      <button @click="goToHome" class="back-btn" title="返回直播间导航页">
+        <svg viewBox="0 0 24 24" width="20" height="20">
+          <path fill="currentColor" d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" />
+        </svg>
+        <span class="back-text">返回导航</span>
+      </button>
+    </div>
+
+    <!-- 未开始直播遮罩 -->
+    <div v-if="showNotLivingOverlay" class="not-living-overlay">
+      <div class="not-living-content">
+        <div class="not-living-icon">
+          <svg viewBox="0 0 24 24" width="48" height="48">
+            <path fill="currentColor"
+              d="M17,10.5V7A1,1 0 0,0 16,6H4A1,1 0 0,0 3,7V17A1,1 0 0,0 4,18H16A1,1 0 0,0 17,17V13.5L21,17.5V6.5L17,10.5M15,8V16H5V8H15M10.5,12.5L13.25,15H7.75L10.5,12.5M10.5,10.5L8.75,8H12.25L10.5,10.5Z" />
+          </svg>
+        </div>
+        <h3 class="not-living-title">直播未开始</h3>
+        <p class="not-living-message" v-if="liveStore.isStreamer">
+          点击左上角"开始直播"按钮开始推流
+        </p>
+        <p class="not-living-message" v-else>
+          主播还未开始直播，请稍后再试
+        </p>
+      </div>
+    </div>
+
     <!-- 长按倍速提示 -->
     <div v-if="isSpeedUp" class="speed-up-indicator">
       <svg viewBox="0 0 24 24" width="24" height="24" class="speed-icon">
@@ -148,7 +177,7 @@ import { inject, ref, watchEffect, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 import { useRoute } from 'vue-router'
 import { useLiveStore } from '../store'
-import Hls from 'hls.js' 
+import Hls from 'hls.js'
 
 // 使用 store
 const liveStore = useLiveStore()
@@ -197,7 +226,19 @@ const hoveringSlider = ref(false)
 const volume = ref(1.0)
 const isMuted = ref(false)
 
-// 新增进度拖动相关状态
+// 计算是否显示未开始直播遮罩
+const showNotLivingOverlay = computed(() => {
+  // 回放模式不显示
+  if (liveStore.isPlaybackMode) return false;
+
+  // 有错误时不显示
+  if (errorState.value) return false;
+
+  // 直播未开始时显示
+  return !liveStore.isliving;
+});
+
+// 进度拖动相关状态
 const isDraggingSlide = ref(false);
 const dragStartX = ref(0);
 const dragStartY = ref(0);
@@ -259,8 +300,8 @@ watchEffect(() => {
     if (liveStore.isPlaybackMode) {
       console.log('回放模式：加载视频文件')
       lines.value = [
-        { name: `回放视频${liveStore.playbackId}`, url: liveStore.playback_url },
-        { name: `备用线路`, url: liveStore.playback_url }
+        { name: `回放线路1`, url: liveStore.playback_url },
+        { name: `回放线路2`, url: liveStore.playback_url }
       ]
     } else {
       console.log('直播模式：加载直播流')
@@ -282,17 +323,26 @@ watchEffect(() => {
 
     // 初始化播放器
     const video = videoRef.value
-    if (video) {
+    if (video && (liveStore.isPlaybackMode || liveStore.isliving)) {
       isLoading.value = true
-      
-      if (currentStreamType.value === 'hls') {
-        initHLS(video, liveStore.playback_url)
-      } else if (currentStreamType.value === 'mp4') {
-        initMP4(video, liveStore.playback_url)
-      } else {
-        console.warn('未知的流类型，尝试使用原生播放器')
-        initMP4(video, liveStore.playback_url)
-      }
+      initVideoPlayer(video, liveStore.playback_url)
+    }
+  } else if (!liveStore.isPlaybackMode && !liveStore.isliving) {
+    // 直播模式但未开始直播，清理播放器状态
+    console.log('直播未开始，清理播放器状态')
+    const video = videoRef.value
+    if (video) {
+      video.src = ''
+      isPlaying.value = false
+      currentTime.value = 0
+      duration.value = 0
+      progressPercentage.value = 0
+    }
+    
+    // 销毁HLS实例
+    if (hls.value) {
+      hls.value.destroy()
+      hls.value = null
     }
   }
 })
@@ -338,6 +388,10 @@ function formatTime(seconds: number): string {
 // 检测视频类型的函数
 function detectStreamType(url: string): 'hls' | 'mp4' | 'unknown' {
   if (!url) return 'unknown'
+
+  if (shouldMP4.value) {
+    return 'mp4'
+  }
   
   const urlLower = url.toLowerCase()
   if (urlLower.includes('.m3u8')) {
@@ -369,7 +423,7 @@ function initVideoPlayer(video: HTMLVideoElement, url: string) {
 // 初始化HLS播放器
 function initHLS(video: HTMLVideoElement, url: string) {
   console.log('初始化HLS播放器，URL:', url)
-  
+
   // 销毁现有的HLS实例
   if (hls.value) {
     hls.value.destroy()
@@ -379,14 +433,15 @@ function initHLS(video: HTMLVideoElement, url: string) {
   if (Hls.isSupported()) {
     console.log('HLS.js 支持，使用HLS.js播放')
     isHLSSupported.value = true
-    
+
     const hlsInstance = new Hls({
+      // HLS配置保持不变...
       enableWorker: true,
-      lowLatencyMode: true, // 低延迟模式，适合直播
-      backBufferLength: 90, // 保留90秒的缓冲
-      maxBufferLength: 30,  // 最大缓冲30秒
-      maxMaxBufferLength: 300, // 绝对最大缓冲
-      maxBufferSize: 60 * 1000 * 1000, // 60MB
+      lowLatencyMode: true,
+      backBufferLength: 90,
+      maxBufferLength: 30,
+      maxMaxBufferLength: 300,
+      maxBufferSize: 60 * 1000 * 1000,
       maxBufferHole: 0.5,
       highBufferWatchdogPeriod: 2,
       nudgeOffset: 0.1,
@@ -416,11 +471,38 @@ function initHLS(video: HTMLVideoElement, url: string) {
     hlsInstance.on(Hls.Events.MANIFEST_PARSED, (event: any, data: any) => {
       console.log('HLS: 清单解析完成', data.levels.length + ' 质量级别')
       isLoading.value = false
-      
-      // 自动播放逻辑
+
+      // 修复自动播放逻辑
       if (liveStore.isPlaybackMode) {
-        console.log('回放模式：等待用户手动播放')
-        isPlaying.value = false
+        console.log('回放模式：自动开始播放')
+        // 回放模式也要实际调用 play()
+        video.play()
+          .then(() => {
+            isPlaying.value = true
+            console.log('HLS回放自动播放成功')
+          })
+          .catch(err => {
+            if (err.name === 'NotAllowedError') {
+              console.log('回放模式尝试静音播放...')
+              video.muted = true
+              previousVolume.value = volume.value
+              volume.value = 0
+              isMuted.value = true
+              video.play()
+                .then(() => {
+                  isPlaying.value = true
+                  console.log('HLS回放静音自动播放成功')
+                })
+                .catch(err2 => {
+                  console.error('HLS回放静音也无法自动播放:', err2)
+                  // 设置为暂停状态，等待用户手动播放
+                  isPlaying.value = false
+                })
+            } else {
+              console.error('HLS回放播放失败:', err)
+              isPlaying.value = false
+            }
+          })
       } else {
         console.log('直播模式：尝试自动播放')
         video.play()
@@ -446,13 +528,14 @@ function initHLS(video: HTMLVideoElement, url: string) {
       }
     })
 
+    // 其他HLS事件监听保持不变...
     hlsInstance.on(Hls.Events.LEVEL_SWITCHED, (event: any, data: any) => {
       console.log('HLS: 切换到质量级别', data.level)
     })
 
     hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
       console.error('HLS错误:', data)
-      
+
       if (data.fatal) {
         switch (data.type) {
           case Hls.ErrorTypes.NETWORK_ERROR:
@@ -467,14 +550,12 @@ function initHLS(video: HTMLVideoElement, url: string) {
             console.log('HLS: 致命错误，销毁并重试...')
             hlsInstance.destroy()
             hls.value = null
-            // 可以在这里尝试重新初始化或降级到原生播放
             handleHLSFallback(video, url)
             break
         }
       }
     })
 
-    // 监听缓冲事件
     hlsInstance.on(Hls.Events.ERROR, (event: any, data: any) => {
       if (data.details === 'bufferStalledError') {
         console.log('HLS: 缓冲停滞')
@@ -498,10 +579,20 @@ function initHLS(video: HTMLVideoElement, url: string) {
     isHLSSupported.value = true
     video.src = url
     video.load()
-    
-    if (!liveStore.isPlaybackMode) {
-      video.play().catch(err => console.error('Safari HLS播放失败:', err))
-    }
+
+    // 统一的播放逻辑
+    video.addEventListener('loadeddata', () => {
+      video.play()
+        .then(() => {
+          isPlaying.value = true
+          console.log('Safari HLS播放成功')
+        })
+        .catch(err => {
+          console.error('Safari HLS播放失败:', err)
+          isPlaying.value = false
+        })
+    }, { once: true })
+
   } else {
     console.error('当前浏览器不支持HLS播放')
     isHLSSupported.value = false
@@ -509,22 +600,14 @@ function initHLS(video: HTMLVideoElement, url: string) {
   }
 }
 
-// HLS降级处理
-function handleHLSFallback(video: HTMLVideoElement, url: string) {
-  console.log('HLS播放失败，尝试降级处理')
-  
-  // 可以尝试找到MP4备用流或显示错误信息
-  errorState.value = true
-  errorMessage.value = '当前浏览器不支持HLS播放，请使用支持的浏览器或更新浏览器版本'
-  
-  // 如果有备用的MP4流，可以尝试切换
-  // video.src = fallbackMp4Url
-  // video.load()
-}
-
-// 初始化MP4播放器（原有逻辑）
+// 初始化MP4播放器
 function initMP4(video: HTMLVideoElement, url: string) {
   console.log('初始化MP4播放器，URL:', url)
+  console.log('设备信息:', {
+    userAgent: navigator.userAgent,
+    isMobile: isMobileDevice.value,
+    screenWidth: window.innerWidth
+  })
   
   // 销毁HLS实例（如果存在）
   if (hls.value) {
@@ -533,36 +616,142 @@ function initMP4(video: HTMLVideoElement, url: string) {
     hls.value = null
   }
 
-  // 使用原生video标签播放
-  video.src = url
-  video.load()
+  // 清理现有的事件监听器
+  const newVideo = video.cloneNode(true) as HTMLVideoElement
+  video.parentNode?.replaceChild(newVideo, video)
+  videoRef.value = newVideo
 
-  // 回放模式和直播模式的播放策略
-  if (liveStore.isPlaybackMode) {
-    console.log('回放模式：等待用户手动播放')
-    isPlaying.value = false
-  } else {
-    video.play()
-      .then(() => {
-        isPlaying.value = true
-        console.log('MP4直播自动播放成功')
-      })
-      .catch(err => {
-        if (err.name === 'NotAllowedError') {
-          console.log('尝试静音播放...')
-          video.muted = true
-          previousVolume.value = volume.value
-          volume.value = 0
-          isMuted.value = true
-          video.play()
-            .then(() => {
-              isPlaying.value = true
-              console.log('MP4静音自动播放成功')
-            })
-            .catch(err2 => console.error('MP4静音也无法自动播放:', err2))
-        }
-      })
+  // 设置视频属性
+  newVideo.controls = false
+  newVideo.preload = 'metadata'
+  newVideo.playsInline = true // 移动端内联播放
+  newVideo.muted = false // 初始不静音
+  
+  // 移动端特殊设置
+  if (isMobileDevice.value) {
+    newVideo.setAttribute('webkit-playsinline', 'true')
+    newVideo.setAttribute('playsinline', 'true')
+    newVideo.setAttribute('x5-video-player-type', 'h5') // 腾讯X5内核
+    newVideo.setAttribute('x5-video-player-fullscreen', 'false')
+    newVideo.setAttribute('x5-video-orientation', 'portraint') // 竖屏
   }
+
+  // 设置视频源
+  newVideo.src = url
+  
+  // 添加事件监听器
+  newVideo.addEventListener('loadstart', () => {
+    console.log('MP4: 开始加载')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('loadedmetadata', () => {
+    console.log('MP4: 元数据加载完成', {
+      duration: newVideo.duration,
+      videoWidth: newVideo.videoWidth,
+      videoHeight: newVideo.videoHeight
+    })
+  })
+  
+  newVideo.addEventListener('loadeddata', () => {
+    console.log('MP4: 数据加载完成')
+    isLoading.value = false
+    
+    // 回放模式自动播放
+    if (liveStore.isPlaybackMode) {
+      console.log('回放模式：尝试自动播放')
+      
+      // 移动端需要用户交互才能播放，先尝试播放
+      newVideo.play()
+        .then(() => {
+          isPlaying.value = true
+          console.log('MP4回放自动播放成功')
+        })
+        .catch(err => {
+          console.log('自动播放被阻止:', err.name, err.message)
+          
+          if (err.name === 'NotAllowedError') {
+            console.log('尝试静音播放...')
+            newVideo.muted = true
+            isMuted.value = true
+            volume.value = 0
+            
+            newVideo.play()
+              .then(() => {
+                isPlaying.value = true
+                console.log('MP4回放静音自动播放成功')
+              })
+              .catch(err2 => {
+                console.error('静音播放也失败:', err2)
+                isPlaying.value = false
+                // 显示点击播放提示
+                showPlayButton.value = true
+              })
+          } else {
+            console.error('播放失败:', err)
+            isPlaying.value = false
+            showPlayButton.value = true
+          }
+        })
+    }
+  })
+  
+  newVideo.addEventListener('canplay', () => {
+    console.log('MP4: 可以播放')
+    isLoading.value = false
+  })
+  
+  newVideo.addEventListener('error', (e) => {
+    const error = newVideo.error
+    console.error('MP4播放错误:', {
+      code: error?.code,
+      message: error?.message,
+      url: url
+    })
+    
+    errorState.value = true
+    errorMessage.value = `视频加载失败 (错误代码: ${error?.code})`
+    isLoading.value = false
+  })
+  
+  newVideo.addEventListener('stalled', () => {
+    console.log('MP4: 网络停滞')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('waiting', () => {
+    console.log('MP4: 等待数据')
+    isLoading.value = true
+  })
+  
+  newVideo.addEventListener('playing', () => {
+    console.log('MP4: 开始播放')
+    isLoading.value = false
+    isPlaying.value = true
+    showPlayButton.value = false
+  })
+  
+  newVideo.addEventListener('pause', () => {
+    console.log('MP4: 暂停播放')
+    isPlaying.value = false
+  })
+
+  // 加载视频
+  newVideo.load()
+  console.log('调用 video.load()')
+}
+
+// HLS降级处理
+function handleHLSFallback(video: HTMLVideoElement, url: string) {
+  console.log('HLS播放失败，尝试降级处理')
+
+  // 可以尝试找到MP4备用流或显示错误信息
+  errorState.value = true
+  errorMessage.value = '当前浏览器不支持HLS播放，请使用支持的浏览器或更新浏览器版本'
+
+  // 如果有备用的MP4流，可以尝试切换
+  // video.src = fallbackMp4Url
+  // video.load()
 }
 
 // 处理视频错误
@@ -712,11 +901,11 @@ function togglePlay() {
               showCenterIcon.value = false
               fadeOutIcon.value = false
               iconTimer = null
-            }, 500) // 淡出动画持续时间
-          }, 800) // 显示持续时间
+            }, 500)
+          }, 800)
         })
         .catch(error => {
-          // 视频播放失败（例如自动播放被阻止）
+          // 视频播放失败
           console.error("播放失败:", error)
           // 恢复暂停状态
           isPlaying.value = false
@@ -963,7 +1152,7 @@ function changeLine() {
 
   // 检测新线路的流类型
   const newStreamType = detectStreamType(currentLine.value.url)
-  
+
   if (newStreamType === 'hls') {
     // HLS流切换
     if (hls.value) {
@@ -977,7 +1166,7 @@ function changeLine() {
       hls.value.destroy()
       hls.value = null
     }
-    
+
     video.src = currentLine.value.url
     video.load()
   }
@@ -1018,14 +1207,14 @@ function reload() {
     console.log('重新加载HLS流')
     hls.value.stopLoad()
     hls.value.loadSource(currentLine.value.url)
-    
+
     if (wasPlaying) {
       video.play().catch(err => console.error('HLS重新播放失败:', err))
     }
   } else {
     // MP4重新加载
     video.load()
-    
+
     video.onloadeddata = () => {
       if (liveStore.isPlaybackMode) {
         video.currentTime = currentPosition
@@ -1036,7 +1225,7 @@ function reload() {
       }
     }
   }
-  
+
   resetHideControlsTimer()
 }
 
@@ -1085,6 +1274,7 @@ onMounted(() => {
   if (video) {
     video.addEventListener('stalled', onBuffer) // 网络不佳也可触发
     video.addEventListener('canplay', onPlay)
+
   }
 
   const updateBuffered = () => {
@@ -1159,16 +1349,54 @@ function resumeHideControlsTimer() {
   startHideControlsTimer()
 }
 
+// 新增：返回导航页功能
+function goToHome() {
+  console.log('用户点击返回导航页')
 
+  // 确认用户是否要离开
+  const shouldLeave = confirm('确定要离开当前直播间返回导航页吗？')
 
-onUnmounted(() => {
+  if (shouldLeave) {
+    // 清理资源
+    cleanup()
+
+    // 跳转到导航页
+    window.location.href = 'https://lcmonitor.dynv6.net/'
+  }
+}
+
+// 清理资源的函数
+function cleanup() {
+  // 停止视频播放
+  const video = videoRef.value
+  if (video) {
+    video.pause()
+    video.src = ''
+  }
 
   // 销毁HLS实例
   if (hls.value) {
     hls.value.destroy()
     hls.value = null
   }
-  
+
+  // 断开WebSocket连接
+  if (liveStore.isWsConnected) {
+    liveStore.disconnectFromChat()
+  }
+
+  console.log('资源清理完成')
+}
+
+onUnmounted(() => {
+  cleanup()
+
+  // 销毁HLS实例
+  if (hls.value) {
+    hls.value.destroy()
+    hls.value = null
+  }
+
   // 移除触摸事件监听
   const videoContainer = document.querySelector('.video-container');
   if (videoContainer) {
@@ -1233,6 +1461,174 @@ video {
   /* 不干扰点击 */
   overflow: hidden;
   z-index: 5;
+}
+
+/*返回导航页按钮样式 */
+.back-to-home-button {
+  position: absolute;
+  top: 28px;
+  align-self: center;
+  z-index: 15;
+  transition: opacity 0.3s ease;
+}
+
+.back-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 50px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.back-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.back-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.back-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.back-btn:hover svg {
+  transform: translateX(-2px);
+}
+
+.back-text {
+  white-space: nowrap;
+  transition: opacity 0.3s ease;
+}
+
+/* 全屏模式下的样式调整 */
+.video-container:fullscreen .back-to-home-button {
+  top: 30px;
+  left: 30px;
+}
+
+/* 控制栏隐藏时，返回按钮保持可见但半透明 */
+.video-container .back-to-home-button {
+  opacity: 1;
+}
+
+.video-container:not(:hover) .back-to-home-button {
+  opacity: 0.7;
+}
+
+.video-container:not(:hover) .back-to-home-button:hover {
+  opacity: 1;
+}
+
+/* 确保返回按钮在未开始直播遮罩之上 */
+.not-living-overlay ~ .back-to-home-button {
+  z-index: 20;
+}
+
+/* 未开始直播遮罩样式 */
+.not-living-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.not-living-content {
+  text-align: center;
+  color: white;
+  padding: 40px 20px;
+  max-width: 400px;
+}
+
+.not-living-icon {
+  margin-bottom: 20px;
+  opacity: 0.8;
+  color: #bdc3c7;
+}
+
+.not-living-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  color: #ecf0f1;
+}
+
+.not-living-message {
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  color: #bdc3c7;
+  opacity: 0.9;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .back-to-home-button {
+    top: 15px;
+    align-self: center;
+  }
+  
+  .back-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+    border-radius: 20px;
+  }
+  
+  .back-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* 移动端可以考虑只显示图标 */
+  .back-text {
+    display: none;
+  }
+  
+  .back-btn {
+    gap: 0;
+    padding: 10px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+
+  .not-living-content {
+    padding: 30px 15px;
+  }
+
+  .not-living-title {
+    font-size: 20px;
+  }
+
+  .not-living-message {
+    font-size: 14px;
+  }
+
+  .not-living-icon svg {
+    width: 40px;
+    height: 40px;
+  }
 }
 
 .danmu {
