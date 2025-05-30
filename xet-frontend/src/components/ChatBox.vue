@@ -52,16 +52,24 @@
     </div>
 
     <!-- 输入区域 -->
+    <!-- 输入区域 -->
     <div class="chat-input-wrapper">
-      <!-- 输入框 -->
-      <textarea v-model="message" :style="{ height: inputHeight + 'px' }" placeholder="请输入您想讨论的内容"
-        @keyup.enter="sendMessage" :disabled="currentTab !== '讨论'" />
+      <!-- 修改输入框的禁用逻辑 -->
+      <textarea 
+        v-model="message" 
+        :style="{ height: inputHeight + 'px' }" 
+        :placeholder="getInputPlaceholder"
+        @keyup.enter="sendMessage" 
+        :disabled="isInputDisabled" 
+        ref="textareaRef" />
 
-      <!-- 发送按钮 -->
-      <button class="send-button" @click="sendMessage" :disabled="currentTab !== '讨论' || isSending || !message.trim()">
-        {{ isSending ? '发送中...' : '发送' }}
+      <!-- 修改发送按钮的禁用逻辑 -->
+      <button 
+        class="send-button" 
+        @click="sendMessage" 
+        :disabled="isSendButtonDisabled">
+        {{ getSendButtonText }}
       </button>
-
     </div>
   </div>
 </template>
@@ -115,6 +123,86 @@ const explanationMessages = computed(() => liveStore.explanations || [])
 const discussionMessages = computed(() => liveStore.comments || [])
 const fileMessages = computed(() => liveStore.files || [])
 const emit = defineEmits(['send-comment', 'send-explanation', 'send-file', 'load-more-comments', 'load-more-explanations', 'load-more-files', 'send-error'])
+
+// 计算输入框是否禁用
+const isInputDisabled = computed(() => {
+  // 如果正在发送，禁用输入
+  if (isSending.value) return true;
+  
+  // 如果是回放模式，禁用输入
+  if (liveStore.isPlaybackMode) return true;
+  
+  // 如果当前是讨论标签页，所有用户都可以发送
+  if (currentTab.value === '讨论') return false;
+  
+  // 如果当前是讲解标签页，只有主播（用户ID=1）可以发送
+  if (currentTab.value === '讲解') {
+    return liveStore.currentUserId !== 1;
+  }
+  
+  // 文件标签页不允许发送文本消息
+  if (currentTab.value === '文件') return true;
+  
+  return true;
+});
+
+// 计算发送按钮是否禁用
+const isSendButtonDisabled = computed(() => {
+  // 基本禁用条件
+  if (isSending.value || !message.value.trim()) return true;
+  
+  // 如果是回放模式，禁用发送
+  if (liveStore.isPlaybackMode) return true;
+  
+  // 如果当前是讨论标签页，所有用户都可以发送
+  if (currentTab.value === '讨论') return false;
+  
+  // 如果当前是讲解标签页，只有主播（用户ID=1）可以发送
+  if (currentTab.value === '讲解') {
+    return liveStore.currentUserId !== 1;
+  }
+  
+  // 文件标签页不允许发送文本消息
+  return true;
+});
+
+//获取输入框占位符文本
+const getInputPlaceholder = computed(() => {
+  if (liveStore.isPlaybackMode) {
+    return '回放模式下无法发送消息';
+  }
+  
+  if (currentTab.value === '讨论') {
+    return '请输入您想讨论的内容';
+  }
+  
+  if (currentTab.value === '讲解') {
+    if (liveStore.currentUserId === 1) {
+      return '请输入讲解内容（仅主播可发送）';
+    } else {
+      return '只有主播可以发送讲解内容';
+    }
+  }
+  
+  if (currentTab.value === '文件') {
+    return '文件标签页不支持文本输入';
+  }
+  
+  return '请输入内容';
+});
+
+// 获取发送按钮文本
+const getSendButtonText = computed(() => {
+  if (isSending.value) {
+    return currentTab.value === '讲解' ? '发送讲解中...' : '发送中...';
+  }
+  
+  if (currentTab.value === '讲解') {
+    return liveStore.currentUserId === 1 ? '发送讲解' : '无权限';
+  }
+  
+  return '发送';
+});
 
 // 定义当前要显示的组件
 const currentTabComponent = computed(() => {
@@ -194,22 +282,39 @@ function updateMessageStatus(message: Comment | Explanation, sending: boolean, e
 }
 
 async function sendMessage() {
+  // 权限检查
+  if (liveStore.isPlaybackMode) {
+    emit('send-error', '回放模式下无法发送消息');
+    return;
+  }
+  
+  if (currentTab.value === '讲解' && liveStore.currentUserId !== 1) {
+    emit('send-error', '只有主播可以发送讲解内容');
+    return;
+  }
+  
+  if (currentTab.value === '文件') {
+    emit('send-error', '文件标签页不支持文本发送');
+    return;
+  }
+  
   // 如果消息为空或者只有空格，不发送
-  if (!message.value.trim()) return
+  if (!message.value.trim()) return;
 
   // 如果正在发送中，防止重复发送
-  if (isSending.value) return
+  if (isSending.value) return;
 
   // 添加提问标签（可选）
-  const tag = isQuestion.value ? '[提问] ' : ''
-  const content = tag + message.value
+  const tag = isQuestion.value ? '[提问] ' : '';
+  const content = tag + message.value;
 
   // 清空输入框，提高用户体验
-  message.value = ''  
-  isSending.value = true
+  message.value = '';  
+  isSending.value = true;
 
   let timeoutTimer: number | undefined;
   let localMessage: Comment | Explanation | null = null;
+  
   try {
     if (currentTab.value === '讨论') {
       // 创建本地消息对象
@@ -222,8 +327,9 @@ async function sendMessage() {
         sending: true,
         error: false
       } as Comment;
+      
       // 添加到本地消息列表
-      liveStore.comments.push(localMessage)
+      liveStore.comments.push(localMessage);
       
       try {
         // 发送到服务器
@@ -237,24 +343,29 @@ async function sendMessage() {
         }
       } catch (innerError) {
         // 网络错误，立即更新消息状态
-        console.error('发送失败:', innerError);
+        console.error('发送评论失败:', innerError);
         updateMessageStatus(localMessage, false, true);
-        throw innerError; // 继续抛出错误
+        throw innerError;
       }
+      
     } else if (currentTab.value === '讲解') {
-      // 创建本地讲解消息，同样的模式
-      // ...类似的代码...
+      // 再次确认是主播
+      if (liveStore.currentUserId !== 1) {
+        throw new Error('只有主播可以发送讲解内容');
+      }
+      
+      // 创建本地讲解消息
       localMessage = {
         expla_id: Date.now(),
         creator_user_id: liveStore.currentUserId,
         content,
-        created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+        created_at: new Date(new Date().getTime() + 8 * 60 * 60 * 1000).toISOString().replace('T', ' ').slice(0, 19),
         living_stream_id: liveStore.currentLiveId ?? 0,
         sending: true,
         error: false
       } as Explanation;
       
-      liveStore.explanations.push(localMessage)
+      liveStore.explanations.push(localMessage);
       
       try {
         const success = await liveStore.sendExplanation(content);
@@ -263,27 +374,29 @@ async function sendMessage() {
         if (!success) {
           throw new Error('服务器返回错误，发送失败');
         }
+        
+        console.log('讲解发送成功');
       } catch (innerError) {
+        console.error('发送讲解失败:', innerError);
         updateMessageStatus(localMessage, false, true);
         throw innerError;
       }
     }
     
-    // 其他代码保持不变...
   } catch (error) {
     // 清除超时计时器
     if (timeoutTimer) {
-      clearTimeout(timeoutTimer)
-      timeoutTimer = undefined
+      clearTimeout(timeoutTimer);
+      timeoutTimer = undefined;
     }
     
     // 获取错误信息
-    const errorMsg = error instanceof Error ? error.message : '发送失败，请重试'
+    const errorMsg = error instanceof Error ? error.message : '发送失败，请重试';
     
     // 触发错误事件
-    emit('send-error', errorMsg)
+    emit('send-error', errorMsg);
   } finally {
-    isSending.value = false
+    isSending.value = false;
   }
 }
 
