@@ -608,11 +608,11 @@ public:
       return result_dto;
     }
 
-    if(check_ffmpeg(id)){
-      result_dto->statusCode = 500;
-      result_dto->message = "RTMP stream not detected!";
-      return result_dto;
-    }
+    // if(check_ffmpeg(id)){
+    //   result_dto->statusCode = 500;
+    //   result_dto->message = "RTMP stream not detected!";
+    //   return result_dto;
+    // }
 
     // 构造playback_title
     auto now = std::chrono::system_clock::now();
