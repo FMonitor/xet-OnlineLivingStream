@@ -283,9 +283,10 @@ const isMobileDevice = computed(() => {
 });
 
 // 支持不同的视频类型
+const hasInitialized = ref(false);
+
 watchEffect(() => {
   if (liveStore.playback_url) {
-    // console.log('视频地址已更新:', liveStore.playback_url)
     console.log('当前状态:', {
       isPlaybackMode: liveStore.isPlaybackMode,
       isliving: liveStore.isliving,
@@ -294,7 +295,6 @@ watchEffect(() => {
 
     // 现有的线路设置逻辑保持不变...
     if (liveStore.isPlaybackMode) {
-      // console.log('回放模式：加载视频文件')
       lines.value = [
         { name: `回放线路1`, url: liveStore.playback_url },
         { name: `回放线路2`, url: liveStore.playback_url }
@@ -308,10 +308,8 @@ watchEffect(() => {
     // 调整初始化条件
     const video = videoRef.value
     if (video) {
-      // 回放模式：只要有 playback_url 就初始化
-      // 直播模式：需要 isliving 为 true 才初始化
       const shouldInitialize = liveStore.isPlaybackMode || liveStore.isliving
-      
+
       console.log('初始化条件检查:', {
         hasVideo: !!video,
         hasUrl: !!liveStore.playback_url,
@@ -319,13 +317,16 @@ watchEffect(() => {
         isliving: liveStore.isliving,
         shouldInitialize
       })
-      
-      if (shouldInitialize) {
+
+      if (shouldInitialize && !hasInitialized.value) {
         console.log('满足初始化条件，开始初始化播放器')
         isLoading.value = true
         initVideoPlayer(video, liveStore.playback_url)
-      } else {
-        console.log('不满足初始化条件，等待直播开始')
+        hasInitialized.value = true
+      }
+      // 如果切换到非shouldInitialize状态，重置标志
+      if (!shouldInitialize) {
+        hasInitialized.value = false
       }
     }
   }
