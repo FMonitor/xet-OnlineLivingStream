@@ -73,18 +73,11 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
   {
     prctl(PR_SET_PDEATHSIG, SIGHUP);
     // 子进程
-    execlp(
-        "ffmpeg", "ffmpeg",
-        "-i", (RTMP_URL_LOCALHOST + std::to_string(living_id)).c_str(),
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-g", "60",
-        "-c:a", "aac", "-b:a", "128k",
-        "-f", "hls",
-        "-hls_time", std::to_string(hls_time).c_str(),
-        "-hls_list_size", "0",
-        // 🚨🚨🚨 重点修改：移除 "-hls_path"，替换为完整路径
-        "-hls_segment_filename", ts_full_pattern.c_str(),
-        m3u8_full_path.c_str(),
-        (char *)nullptr);
+    std::string cmd = "ffmpeg -i \"" + (RTMP_URL_LOCALHOST + std::to_string(living_id)) +
+                      "\" -c:v libx264 -preset veryfast -crf 23 -g 60 -c:a aac -b:a 128k -f hls -hls_time " +
+                      std::to_string(hls_time) + " -hls_list_size 0 -hls_segment_filename \"" +
+                      ts_full_pattern + "\" \"" + m3u8_full_path + "\" > /tmp/ffmpeg.log 2>&1";
+    system(cmd.c_str());
     // execlp失败
     std::cerr << "execlp ffmpeg failed!" << std::endl;
     exit(1);
