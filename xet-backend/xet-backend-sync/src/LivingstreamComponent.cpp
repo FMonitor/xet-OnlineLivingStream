@@ -43,7 +43,7 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
 
   // 拼接分片文件（ts）路径模式
   std::string ts_full_pattern = hls_output_dir + "/" + ts_pattern;
-  
+
   // 打印当前工作目录
   char cwd[1024];
   if (getcwd(cwd, sizeof(cwd)) != nullptr)
@@ -75,7 +75,7 @@ void start_ffmpeg(int64_t living_id, int64_t playback_id)
     // 子进程
     std::string cmd = "ffmpeg -i \"" + (RTMP_URL_LOCALHOST + std::to_string(living_id)) +
                       "\" -c:v libx264 -preset veryfast -crf 23 -g 60 -c:a aac -b:a 128k -f hls -hls_time " +
-                      std::to_string(hls_time) + " -hls_list_size 0 -hls_segment_filename \"" +
+                      std::to_string(hls_time) + " -hls_list_size 10 -hls_segment_filename \"" +
                       ts_full_pattern + "\" \"" + m3u8_full_path + "\" > /tmp/ffmpeg.log 2>&1";
     system(cmd.c_str());
     // execlp失败
