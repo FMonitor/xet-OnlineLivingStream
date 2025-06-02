@@ -7,6 +7,9 @@ pid1=$!
 /app/xet-backend-sync/build/xet-backend-sync-exe &
 pid2=$!
 
+# 启动 nginx
+/usr/local/nginx/nginx
+
 # 等待两个脚本完成
 wait $pid1
 if [ $? -ne 0 ]; then
